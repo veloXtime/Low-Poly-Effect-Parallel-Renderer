@@ -1,3 +1,3 @@
-# Low-Poly-Effect-Parallel-Algorithm
+# Low-Poly-Effect-Parallel-Renderer
 
-Web page: [Low-Poly-Effect-Parallel-Algorithm](https://veloxtime.github.io/Low-Poly-Effect-Parallel-Algorithm/)
+Web page: [Low-Poly-Effect-Parallel-Renderer](https://veloxtime.github.io/Low-Poly-Effect-Parallel-Renderer/)
