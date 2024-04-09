@@ -1,0 +1,390 @@
+\documentclass[12pt]{article}
+
+\usepackage{parskip}
+\usepackage{geometry}
+\geometry{
+ 	letterpaper,
+ 	left=20mm,
+ 	right=20mm,
+ 	top=20mm,
+ 	bottom=25mm
+}
+
+% coloring
+\usepackage[dvipsnames]{xcolor}
+\usepackage[10pt]{moresize}
+\usepackage{newtxtext}
+
+\usepackage{graphicx}
+\graphicspath{ {\string~/Documents/deposit/} }
+
+% latex math packages
+\usepackage{latexsym,amsfonts,amssymb,amsthm,amsmath}
+
+\usepackage{listings}
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.95}
+\lstset{
+	language=C++,
+	backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\fontsize{10}{10}\ttfamily,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    %numbers=left,                    
+    %numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=4,
+%autogobble=true,
+    xleftmargin=.25in
+}
+
+% graphing
+\usepackage{graphpap}
+%\usepackage[dvips]{graphics}
+\usepackage{tkz-euclide}
+
+% miscellaneous
+\usepackage{enumitem}
+\usepackage{cases}
+
+% clickable content
+\usepackage{hyperref}
+\hypersetup{
+	colorlinks=true,
+	linktoc=all, 
+linkcolor=black}
+
+% for taking notes
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[subsection]
+
+\theoremstyle{plain}
+\newtheorem{theorem*}[definition]{Theorem}
+\newtheorem{theorem}[definition]{Theorem}
+\newtheorem{thm}{\textit{Theorem}}[subsection]
+\newtheorem{lemma}{Lemma}[subsection]
+\newtheorem{conjecture}{Conjecture}[subsection]
+\newtheorem{proposition}{Proposition}[subsection]
+\newtheorem{example}{Example}[subsection]
+\newtheorem{corollary}{Corollary}[subsection]
+\newtheorem{algorithm}{Algorithm}[subsection]
+
+% Blackboard bold letters 
+% \newcommand {⟨cmd⟩} [⟨num⟩] [⟨default⟩] {⟨definition⟩} 
+
+\newcommand{\set}[2]{\{#1\,:\,\text{#2}\}}
+\newcommand{\abs}[1]{\left| #1 \right|}
+\newcommand{\mC}{{\mathbb{C}}}
+\newcommand{\mN}{{\mathbb{N}}}
+\newcommand{\mQ}{{\mathbb{Q}}}
+\newcommand{\mR}{{\mathbb{R}}}
+\newcommand{\mZ}{{\mathbb{Z}}}
+\newcommand{\mF}{{\mathbb{F}}}
+\newcommand{\de}{\delta}
+\newcommand{\ep}{\varepsilon}
+\renewcommand{\phi}{\varphi}
+\newcommand{\dlim}{\displaystyle\lim\limits}
+\newcommand{\dsum}{\displaystyle\sum\limits}
+\renewcommand{\abstractname}{\Large Summary}
+
+\begin{document}
+
+\begin{center}
+{\huge \bf Low Poly Effect Parallel Renderer}
+\vspace{2em}
+
+{\large Author: Felicity Xu (hanyux), Otto Wang (aow)}
+
+{\large Web Page: \href{https://veloxtime.github.io/Low-Poly-Effect-Parallel-Algorithm/}{Low-Poly-Effect-Parallel-Renderer}}
+\end{center}
+
+%==============================================================================
+%==============================================================================
+\section{SUMMARY}
+We are going to develop a low-poly art effect renderer for images using C++ and CUDA on GPUs, focusing on achieving high-quality effect while enhancing computational efficiency through parallel processing.
+
+%==============================================================================
+%==============================================================================
+\bigskip
+\section{BACKGROUND}
+
+Our project aims to parallelize the process of rendering low-poly art images, which
+is inherently compute intensive due to the multiple transformation steps an image
+undergoes. The goal is to develop an algorithm that leverages the parallel
+computation power of modern GPUs.
+
+%Our project focuses on developing a compute-intensive algorithm for rendering low-poly art. The transformation of a standard image into low-poly art consists of several steps, each with its unique challenges and opportunities for parallelization.
+
+\begin{description}
+\item \textbf{Step 1: Gaussian Blur}: We sill start with preprocessing the image 
+using Gaussian blur. This involves convolving each pixel with a Gaussian kernel to
+smooth the image. The independent nature of pixel processing here should make it 
+ideal for parallelization. 
+%The initial stage involves preprocessing the image with a Gaussian blur. The purpose of this step is to smooth the image by reducing noise and detail, which facilitates the subsequent edge detection process. Gaussian blur is inherently parallelizable since each pixel's new value is independent of the others and can be computed simultaneously. As this is not the primary focus of our algorithm, we can either write out the algorithm
+% from scratch. (using pseudocade below) or leverage the OpenCV-CUDA lirbary to implement this step. 
+
+\textit{Pseudocode for Gaussian Blur}:
+\begin{lstlisting}
+GaussianBlur(image, kernelSize, sigma):
+    kernel = GenerateGaussianKernel(kernelSize, sigma)
+    for each pixel in image:
+        sum = 0
+        for each kernelValue, offsetX, offsetY in kernel:
+            neighborPixel = GetPixel(image, pixel.x + offsetX, pixel.y + offsetY)
+            sum += neighborPixel * kernelValue
+            SetPixel(newImage, pixel.x, pixel.y, sum / kernelSum)
+    return newImage
+\end{lstlisting}
+
+\item \textbf{Step 2: Edge Drawing and Vertex Extraction}: (Topal 2012)
+This step is critical for defining the structure of the low-poly art. 
+%We identify significant edges and extract
+%vertices for triangulation by computing gradient magnitudes and performing edge detection. Parallelization
+%can be realized by processing separate image section concurrently. 
+%This crucial step involves identifying the significant edges within the blurred image to extract vertices for triangulation. High-quality edge detection is key to capturing the defining features of the low-poly art style. This step can be parallelized by dividing the image into sections and processing each section on separate threads or GPU cores.
+Edge drawing in essence involves the following steps:
+\begin{itemize}
+\item Computation of the gradient magnitude and edge direction maps. Using the
+smoothed image, compute the horizontal and vertical gradients, $G_x$ and $G_y$,
+respectively. Then calculate gradient magnitude $G=\sqrt{G_x^2 + G_y^2}$.
+\item Extraction of the anchors. Key points, or anchors, are identified based on 
+local gradient maxima. These points serve as vertices for edge tracing.
+\item Connecting the anchors by smart routing. Use a smart heuristic edge tracing
+procesure to map edges. In this step, for each anchor, it proceeds in four
+directions to detect whether neighbors are edge points until a point in the
+neighboring direction is not an edge point. 
+\item For all edge point, use a sampling method to select ones that are important to
+use for triangulation. 
+\end{itemize}
+For the first two steps, we can divide the image into regions and assign one region
+to each thread for proecessing. For the next two steps, one possible parallelization
+is to let each thread take a group of anchor points to determine edge points. 
+Overall, edge drawing algorithm shows great potential for speedup through 
+parallelization.
+
+\item \textbf{Step 3: Delaunay Triangulation}:
+The heart of low-poly art rendering lies in Delaunay triangulation, where we
+construct a mesh of triangles using the vertices obtained from the edge drawing step. 
+There are many ways to compute Delaunay Triangulation, however, research has shown
+that Voronoi Diagram based approaches present best opportunities for parallelization
+(Lo 2012).
+
+
+\item \textbf{Step 4: Final Color Adjustment}:
+The last simple step is to color each triangle based on the pixels beneath it in the original image. This process is highly parallelizable as it involves no inter-triangle dependencies, allowing each triangle to be colored in isolation on separate processing threads.
+\end{description}
+
+Parallelism is beneficial in our project due to the high volume of independent calculations required for each pixel or vertex. The Gaussian blur, for instance, involves convolving a kernel over each pixel, while color adjustment entails computing average or dominant colors for individual triangles. These are tasks that can be distributed across multiple cores in a GPU, significantly accelerating the processing time. Delaunay triangulation is more challenging to parallelize due to its global nature and dependencies but we can still benefit from data-parallelism in Voronoi-based DT algorithms.
+
+
+
+
+
+
+
+%==============================================================================
+%==============================================================================
+\section{CHALLENGE}
+
+This problem is challenging not only because to generate good low poly effect, it 
+requires good edge detection
+algorithm. But also because to achieve efficient computation, it requires careful 
+consideration at each step. 
+
+The main challenges of rendering come from the two steps edge drawing and Delaunay
+triangulation.
+
+{\bf Edge Drawing Step: }
+\begin{itemize}
+\item Load balancing: images that have regions with varying edge complexities can lead to an uneven distribution of workload among the threads. How to distribute work among the threads evenly would be something to take
+care of. 
+\item Divergent Execution: GPU performance can be optimal when threads execute the same operation concurrently.
+However, when we are tracing an edge path, the result can be indeterminate, leading to threads following
+different edge paths, causing an performance decrease. 
+\end{itemize}
+
+{\bf Delaunay Triangulation Step:} While Delaunay triangulation has many algorithms,
+such as divide and conquer or Bowyer-Watson incremental algorithm, most of them are not
+suitable for parallelization. Many of these algorithms involves steps that are 
+inherently sequential. Take Bowyer-Watson for example, points in the triangulation are 
+added one at a time depending on the current status of the triangulation. This 
+sequential logic greatly hinders the possibility of parallelization. Therefore,
+after some research, we have decide that Voronoi Algorithm should be the best a
+lgorithm so far for Delaunay triangulation due to its great data parallelism. 
+(L0 2012) It takes a different approach from many other basic algorithms and uses
+the dual of the Delaunay triangulation -- the Voronoi diagram to help construct
+the Delaunay triangulation, which allows us to exploit the data parallelism of
+the Voronoi diagram. 
+
+Apart from algorithm logic seuqential dependencies, there are also many other things
+about Delaunay triangulation that makes it hard for parallelization:
+\begin{itemize}
+\item {\bf Large Memory Requirements:} For large images, the algorithm requires significant memory resources, which can be a limiting factor in parallel execution.
+\item {\bf False Sharing:} When threads write to pixels that are close to each other on the image, it may lead to false sharing over a single cache line, resulting in inefficient memory usage and potential performance degradation.
+\end{itemize}
+
+
+
+%==============================================================================
+%==============================================================================
+\section{RESOURCES}
+We will develop our low-poly effect parallel renderer from scratch based on C++
+and CUDA using GHC machines containing NVIDIA GeForce RTX 2080B GPUs.
+
+For the overall steps of rendering, we are referencing the paper 
+"Artistic low poly rendering for images" [2]. 
+Meanwhile, we aim to delve deep into each individual step. 
+For the edge drawing algorithm, we will be relying on the paper 
+``Edge drawing: a combined real-time edge and segment detector" by Chihan Topal [5]. 
+And for the Delaunay triangulation step, we are still researching on the different 
+algorithms for Delaunay triangulation. Currently, we are considering using the
+algorithm described in this paper ``Computing two-dimensional Delaunay triangulation
+using graphics hardware" by G Rong [5]. This paper discusses an implementation of 
+using Voronoi diagram to obtain Delaunay Triangulation on GPU.
+
+
+
+
+
+%==============================================================================
+%==============================================================================
+\section{GOALS AND DELIVERABLES}
+
+\subsection*{Goals Plan to Achieve}
+\begin{itemize}
+    \item \textbf{CPU Implementation}: Develop an initial version of the low-poly art effect renderer on the CPU, utilizing existing software packages without specifically focusing on CPU optimizations like SIMD or multi-threading, except where such optimizations are inherently supported by the chosen packages. This version will act as a baseline for our project, enabling the conversion of images of any resolution into low-poly art. It will adhere to the four essential steps outlined in our methodology, providing a standardized approach to creating low-poly images.
+    
+    \item \textbf{CUDA Enhancement}: Transit the renderer over to CUDA, aiming to make it at least 5 times faster for 1920x1080 images compared to our initial CPU version. \\[4pt]
+    \textbf{Justification}: Our early investigations show that easier tasks, like Gaussian Blur and some parts of Edge Drawing, work really well with parallel processing. This means we can speed these parts up a lot (more than 10 times faster) because they fit well with GPU acceleration. Since these simpler tasks are a big part of the whole process, focusing on speeding them up can help us achieve our overall goal of making everything 5 times faster. Even the more complex parts can get a bit of a speed boost from using multiple processors.
+    
+    \item \textbf{Performance Optimization}: Optimize the renderer by experimenting with various parallel algorithms for the critical steps, aiming for at least a 50\% speed increase over the initial CUDA version. \\[4pt]
+    \textbf{Justification}: While more intricate stages of the rendering process may not straightforwardly reach such theoretical maxima, our preliminary assessments and available methodologies indicate feasible strategies to amplify their efficiency by at least 50\%. We're planning to test these out to see how much more we can speed up the process.
+\end{itemize}
+
+\subsection*{Goals Hope to Achieve}
+\begin{itemize}
+    \item \textbf{Video Rendering}: Adapt the algorithm to enable video processing, while eliminating possible jittering artifact. \\[4pt]
+    \textbf{Justification}: Directly applying the algorithm designed for individual images to each frame of a video can introduce noticeable jittering artifacts, as vertices may be selected inconsistently across frames, resulting in significant shifts in triangle positions and coloration from one frame to the next. This issue, highlighted in [7], stems from the random selection of vertices in each frame. We plan to overcome this challenge by implementing strategies that include the use of inherited parameters or other methods to ensure consistency in vertex selection and triangle formation across consecutive frames, thereby reducing jitter and enhancing visual continuity.
+
+    \item \textbf{Video Performance Optimization}: Leverage temporal coherence between frames, aiming for a performance boost of more than 20\% over the initial CUDA version.  \\[4pt]
+    \textbf{Justification}: The potential for performance improvement lies in leveraging the sequential continuity of video frames, a concept supported by findings in [7]. By exploiting this temporal coherence, we aim to implement optimizations that are not applicable to single-image processing. These optimizations could include more efficient memory usage, reduced computational redundancy, and the anticipation of vertex positions based on previous frames, thereby significantly boosting rendering performance for video content.
+    
+\end{itemize}
+
+\subsection*{Demo to Show}
+\begin{itemize}
+    \item \textbf{Methodology and Performance}: Present a detailed exposition of our approach, accompanied by a gallery of transformed images and performance metrics across various resolutions.
+    \item \textbf{Interactive Platform}: Launch an accessible web platform allowing users to upload images (and potentially videos) for rendering. This platform will offer the option to select between CPU and GPU processing modes, providing insights into performance differences based on user-specific inputs.
+\end{itemize}
+
+%==============================================================================
+%==============================================================================
+\bigskip
+\section{PLATFORM CHOICE}
+We will develop our low-poly effect parallel renderer based on C++ and CUDA using GHC machines containing
+NVIDIA GeForce RTX 2080B GPUs. This decision is driven by the inherent advantages of GPUs for our rendering
+workload. GPUs are specifically designed for image processing tasks. The architecture of GPUs has
+large shared memory and high throughput, which is optimal for our rendering task as threads
+are accessing large amount of data.  The low-poly rendering process involves several steps, such as Gaussian
+blur, edge detection and Delaunay triangulation. All of which can be effectively parallelized on GPU with CUDA
+which have the ability to manage thousands of threads simultaneously. 
+
+Another important point is that as we are hoping to add rendering feature for video (if things go well).
+In light of this, GPUs can easily scale to accommodate the increased workload of processing video frames while
+maintaining high performance and efficiency. 
+
+%First, the rendering process involves multiple steps, each of which can be parallelized to a great extent. GPUs
+%are suitable for image processing and rendering with its large shared memory and capability to 
+%manage thousands of threads simultaneously. GPUs are edesigned to excel in image processing tasks like we
+%are doing, GPU with CUDA is optimized for data-parallel computations like applying filters and edge detection.
+%
+%As we are also considering video processing, GPU can easily scale to accomodate larger workload. 
+
+
+%The transformation of 
+%
+%The transformation of an image to a low-poly effect involves four critical phases, each of which exhibits significant potential for parallelization. Given the inherent parallel architecture of GPUs, they are inherently more suited than CPUs for executing the algorithms involved in the rendering steps. 
+%
+%In particular, both Gaussian blur and edge drawing steps can utilize CUDA kernels to apply effects to points
+%on the image. For Delaunay triangulation, we can also use GPU to handle the jobs. 
+%
+%thereby ensuring enhanced performance. This advantage is particularly pertinent in the context of the burgeoning demand for video rendering, coupled with escalating expectations regarding video quality, where rendering efficiency is paramount to ensure seamless, non-obstructive processing.
+%
+%Moreover, the endeavor to achieve high-level parallelization on GPUs presents a sophisticated challenge, especially considering the irregular distribution of tasks and the propensity for divergent execution paths within these phases. The effective management and synchronization of these parallel processes are crucial for optimizing rendering performance and achieving real-time processing capabilities.
+
+
+%==============================================================================
+%==============================================================================
+\section{SCHEDULE}
+
+{\bf Week 1: March 25 - March 30}
+\begin{itemize}
+\item Start the basic structure of the renderer in C++ and CUDA. 
+Finish loading and outputing images, viewing images, etc. 
+\item Research any relevant and existing implementations of low-poly rendering 
+and parallel processing techniques. 
+\end{itemize}
+
+{\bf Week 2: March 31 - April 6}
+\begin{itemize}
+\item For first half of the week, outline and finish Gaussian Blur step for the
+image rendering. 
+\item For second half of the week, start coding on the edge drawing algorithm, 
+aim to finish extraction of anchors and edge routing. 
+\end{itemize}
+
+{\bf Week 3: April 7 - April 13}
+\begin{itemize}
+\item Wrap up edge drawing algorithm, including vertices finding. This is the 
+basic version of our edge drawing step.
+\item Attempt a basic version of delaunay algorithm and test the baseline
+performance.
+\end{itemize}
+
+{\bf Week 4: April 14 - April 20}
+\begin{itemize}
+\item Refine the edge drawing step parallelization to increase speedup. 
+{\color{red} achieve goal speedup}
+\item Refine the final color applying step, this part should be straightforward.
+\end{itemize}
+
+{\bf Week 5: April 21 - April 27}
+\begin{itemize}
+\item Refine the Delaunay triangulation step parallelization to increase speedup
+to our goal. 
+\end{itemize}
+
+{\bf Week 6: April 28 - May 4}
+
+
+\section{REFERENCES}
+
+[1] Chen, Long, and Jin-chao Xu. "Optimal delaunay triangulations." Journal of Computational Mathematics (2004): 299-308.
+
+[2] Gai, Meng, and Guoping Wang. "Artistic low poly rendering for images." The visual computer 32 (2016): 491-500.
+
+[3] Lo, S. H. "Parallel Delaunay triangulation in three dimensions." Computer Methods in Applied Mechanics and Engineering 237 (2012): 88-106.
+
+[4] Ng, Ruisheng, Lai-Kuan Wong, and John See. "Pic2Geom: A fast rendering algorithm for low-poly geometric art." Advances in Multimedia Information Processing–PCM 2017: 18th Pacific-Rim Conference on Multimedia, Harbin, China, September 28-29, 2017, Revised Selected Papers, Part II 18. Springer International Publishing, 2018.
+
+[5] Rong, Guodong, et al. "Computing two-dimensional Delaunay triangulation using graphics hardware." Proceedings of the 2008 symposium on Interactive 3D graphics and games. 2008.
+
+[6] Topal, Cihan, and Cuneyt Akinlar. "Edge drawing: a combined real-time edge and segment detector." Journal of Visual Communication and Image Representation 23.6 (2012): 862-872.
+
+[7] W. Zhang, S. Xiao and X. Shi, "Low-poly style image and video processing," 2015 International Conference on Systems, Signals and Image Processing (IWSSIP), London, UK, 2015, pp. 97-100, doi: 10.1109/IWSSIP.2015.7314186.
+
+
+\end{document}
