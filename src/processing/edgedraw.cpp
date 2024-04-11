@@ -1,15 +1,20 @@
 #include <iostream>
 
 #include "CImg.h"
-#include "processing.h"
 
-cimg_library::CImg<unsigned char> extractEdge(
-    cimg_library::CImg<unsigned char> &image) {
+using CImg = cimg_library::CImg<unsigned char>;
+
+/**
+ * Extract edges from the image using Canny edge detection method.
+ *
+ * @param image Image to extract edge, with RGB color and single depth.
+ * @pre Noise should have been removed on the image in previous steps.
+ */
+CImg extractEdgeCanny(CImg &image) {
     // Create a new image to store the edge
-    cimg_library::CImg<unsigned char> edge(image.width(), image.height(), 1, 1,
-                                           0);
+    CImg edge(image.width(), image.height(), 1, 3, 0);
 
-    // Calculate gradient magnitude for each point
+    // Calculate gradient magnitude for each pixel
     cimg_forXY(image, x, y) {
         // If the pixel is not at the edge of the image
         if (x > 0 && x < image.width() - 1 && y > 0 && y < image.height() - 1) {
@@ -27,3 +32,13 @@ cimg_library::CImg<unsigned char> extractEdge(
 
     return edge;
 }
+
+/**
+ * Convert colored image to grayscale and calculate gradient
+ */
+int gradientInGray(CImg &image, CImg &edge) {}
+
+/**
+ * Calculate gradient separately in RGB dimension and combine
+ */
+int gradientInColor(CImg &image, CImg &edge) {}
