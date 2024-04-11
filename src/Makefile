@@ -1,25 +1,27 @@
-# EXECUTABLE := cudaScan
-# CU_FILES   := scan.cu
-# CU_DEPS    :=
-# CC_FILES   := main.cpp
+# Compiler
+CXX=g++ -m64
+CXXFLAGS=-O3 
+LDFLAGS=-L/usr/local/cuda-11.7/lib64/ -lcudart
+NVCC=nvcc
+NVCCFLAGS=-O3 -m64 --gpu-architecture compute_61 -ccbin /usr/bin/gcc
+INCLUDE := -I. -I/CImg.h
+# Libraries
+LIBS := -lpthread -lX11
 
+# Main executable
+main: main.o gaussianblur.o edgedraw.o
+	$(NVCC) $(CXXFLAGS) -o main main.o gaussianblur.o $(INCLUDE) $(LIBS)
 
-CXX = g++
-CXXFLAGS = -Wall -std=c++11 -I.
-LIBS = -lX11 -lpthread
-TARGET = main
-SRC = main.cpp edge/edge_draw.cpp
-OBJ = $(SRC:.cpp=.o)
+# Object files
+main.o: main.cpp processing.h
+	$(CXX) $(CXXFLAGS) -c main.cpp $(INCLUDE)
 
-all: $(TARGET)
+gaussianblur.o: processing/gaussianblur.cu processing.h
+	$(NVCC) $(CXXFLAGS) -c processing/gaussianblur.cu $(INCLUDE)
 
-$(TARGET): $(SRC)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SRC) $(LIBS)
+edgedraw.o: processing/edgedraw.cpp processing.h
+	$(CXX) $(CXXFLAGS) -c processing/edgedraw.cpp $(INCLUDE)
 
-run: $(TARGET)
-	./$(TARGET)
-
+# Clean
 clean:
-	rm -f $(TARGET)
-
-.PHONY: all run clean
+	rm -f main main.o gaussianblur.o

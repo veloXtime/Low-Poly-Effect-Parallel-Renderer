@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "CImg.h"
+#include "processing.h"
 
 cimg_library::CImg<unsigned char> extractEdge(
     cimg_library::CImg<unsigned char> &image) {
