@@ -5,14 +5,16 @@
 
 
 CXX = g++
-CXXFLAGS = -Wall -std=c++11
-TARGET = image_loader
-SRC = main.cpp
+CXXFLAGS = -Wall -std=c++11 -I.
+LIBS = -lX11 -lpthread
+TARGET = main
+SRC = main.cpp edge/edge_draw.cpp
+OBJ = $(SRC:.cpp=.o)
 
 all: $(TARGET)
 
 $(TARGET): $(SRC)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SRC)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SRC) $(LIBS)
 
 run: $(TARGET)
 	./$(TARGET)
