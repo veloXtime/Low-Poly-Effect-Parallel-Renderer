@@ -111,9 +111,9 @@ void nonMaxSuppression(CImg &edge, CImg &gradient, CImgShort &direction) {
         if (x > 0 && x < edge.width() - 1 && y > 0 && y < edge.height() - 1) {
             if (x > 0 && x < edge.width() - 1 && y > 0 &&
                 y < edge.height() - 1) {
-                double angle = direction(x, y);  // Get the continuous angle
-                int dir = ((int)floor((angle + 22.5) / 45.0)) %
-                          4;  // Discretize the angle into four main directions
+                short angle = direction(x, y);  // Get the continuous angle
+                int dir = discretizeDirection(
+                    angle);  // Discretize the angle into four main directions
 
                 unsigned char magnitude = gradient(x, y);
                 unsigned char mag1 = 0, mag2 = 0;
@@ -148,5 +148,23 @@ void nonMaxSuppression(CImg &edge, CImg &gradient, CImgShort &direction) {
                 }
             }
         }
+    }
+}
+
+int discretizeDirection(short angle) {
+    if ((angle < 22.5 && angle >= -22.5) || angle >= 157.5 || angle < -157.5) {
+        return 0;
+    } else if ((angle >= 22.5 && angle < 67.5) ||
+               (angle < -112.5 && angle >= -157.5)) {
+        return 1;
+    } else if ((angle >= 67.5 && angle < 112.5) ||
+               (angle < -67.5 && angle >= -112.5)) {
+        return 2;
+    } else if ((angle >= 112.5 && angle < 157.5) ||
+               (angle < -22.5 && angle >= -67.5)) {
+        return 3;
+    } else {
+        std::cout << "Error: Angle out of range" << std::endl;
+        return -1;
     }
 }

@@ -14,3 +14,4 @@ void gradientInGray(CImg &image, CImg &gradient, CImgShort &direction);
 void gradientInColor(CImg &image, CImg &gradient, CImgShort &direction);
 gradientResp calculateGradient(CImg &image, int x, int y);
 void nonMaxSuppression(CImg &edge, CImg &gradient, CImgShort &direction);
+int discretizeDirection(short angle);
