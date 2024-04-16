@@ -1,16 +1,8 @@
+#include "edgedraw.h"
+
 #include <iostream>
 
 #include "CImg.h"
-
-struct Gradient {
-    int val;
-    int dir;
-
-    Gradient() : val(0), dir(0) {}
-}
-
-using CImg = cimg_library::CImg<unsigned char>;
-using CImgGradient = cimg_library::CImg<Gradient>;
 
 /**
  * Extract edges from the image using Canny edge detection method.
@@ -19,7 +11,7 @@ using CImgGradient = cimg_library::CImg<Gradient>;
  * @param method Method to use for edge detection, 0 for grayscale, 1 for RGB.
  * @pre Noise should have been removed on the image in previous steps.
  */
-CImg extractEdgeCanny(CImg &image, int method = 0) {
+CImg extractEdgeCanny(CImg &image, int method) {
     // Create a new image to store the edge
     CImgGradient gradient(image.width(), image.height());
 
@@ -30,7 +22,8 @@ CImg extractEdgeCanny(CImg &image, int method = 0) {
         gradientInColor(image, gradient);
     }
 
-    return edge;
+    // TODO: Non-maximum Suppression
+    return image;
 }
 
 /**
@@ -58,8 +51,6 @@ void gradientInGray(CImg &image, CImgGradient &gradient) {
             gradient(x, y) = calculateGradient(grayImage, x, y);
         }
     }
-
-    // TODO: Non-maximum Suppression
 }
 
 /**
