@@ -14,14 +14,14 @@
  */
 CImg extractEdgeCanny(CImg &image, int method) {
     // Create a new image to store the edge
-    CImg edge(image.width(), image.height());
-    CImgInt direction(image.width(), image.height());
+    CImg gradient(image.width(), image.height());
+    CImgShort direction(image.width(), image.height());
 
     // Calculate gradient magnitude for each pixel
     if (method == 0) {
-        gradientInGray(image, edge, direction);
+        gradientInGray(image, gradient, direction);
     } else {
-        gradientInColor(image, edge, direction);
+        gradientInColor(image, gradient, direction);
     }
 
     // print the gradient
@@ -34,7 +34,8 @@ CImg extractEdgeCanny(CImg &image, int method) {
     // }
 
     // Non-maximum Suppression
-    nonMaxSuppression(edge, direction);
+    CImg edge(image.width(), image.height());
+    nonMaxSuppression(edge, gradient, direction);
 
     return edge;
 }
@@ -42,7 +43,7 @@ CImg extractEdgeCanny(CImg &image, int method) {
 /**
  * Convert colored image to grayscale and calculate gradient
  */
-void gradientInGray(CImg &image, CImg &edge, CImgInt &direction) {
+void gradientInGray(CImg &image, CImg &gradient, CImgShort &direction) {
     // Convert the image to grayscale
     CImg grayImage(image.width(), image.height(), 1, 3, 0);
 
@@ -62,7 +63,7 @@ void gradientInGray(CImg &image, CImg &edge, CImgInt &direction) {
         if (x > 0 && x < grayImage.width() - 1 && y > 0 &&
             y < grayImage.height() - 1) {
             gradientResp gr = calculateGradient(grayImage, x, y);
-            edge(x, y) = gr.mag;
+            gradient(x, y) = gr.mag;
             direction(x, y) = gr.dir;
         }
     }
@@ -71,7 +72,7 @@ void gradientInGray(CImg &image, CImg &edge, CImgInt &direction) {
 /**
  * Calculate gradient separately in RGB dimension and combine
  */
-void gradientInColor(CImg &image, CImg &edge, CImgInt &direction) {
+void gradientInColor(CImg &image, CImg &gradient, CImgShort &direction) {
     // TODO: Implement this function
     std::cout << "Error: Function not implemented" << std::endl;
 }
@@ -104,38 +105,46 @@ gradientResp calculateGradient(CImg &image, int x, int y) {
 /**
  * Apply non-maximum suppression to the gradient image
  */
-void nonMaxSuppression(CImg &edge, CImgInt &direction) {
+void nonMaxSuppression(CImg &edge, CImg &gradient, CImgShort &direction) {
     cimg_forXY(edge, x, y) {
         // If the pixel is not at the edge of the image
         if (x > 0 && x < edge.width() - 1 && y > 0 && y < edge.height() - 1) {
-            // Get the direction of the gradient
-            int dir = direction(x, y);
+            if (x > 0 && x < edge.width() - 1 && y > 0 &&
+                y < edge.height() - 1) {
+                double angle = direction(x, y);  // Get the continuous angle
+                int dir = ((int)floor((angle + 22.5) / 45.0)) %
+                          4;  // Discretize the angle into four main directions
 
-            // Check the direction of the gradient
-            if (dir < 0) {
-                dir += 180;
-            }
+                unsigned char magnitude = gradient(x, y);
+                unsigned char mag1 = 0, mag2 = 0;
 
-            // Check the direction of the gradient
-            if (dir >= 157.5 || dir < 22.5) {
-                if (edge(x, y) < edge(x, y + 1) ||
-                    edge(x, y) < edge(x, y - 1)) {
-                    edge(x, y) = 0;
+                // Determine neighboring pixels to compare based on the gradient
+                // direction
+                switch (dir) {
+                    case 0:  // Horizontal edge (East-West)
+                        mag1 = gradient(x - 1, y);
+                        mag2 = gradient(x + 1, y);
+                        break;
+                    case 1:  // Diagonal edge (Northeast-Southwest)
+                        mag1 = gradient(x - 1, y - 1);
+                        mag2 = gradient(x + 1, y + 1);
+                        break;
+                    case 2:  // Vertical edge (North-South)
+                        mag1 = gradient(x, y - 1);
+                        mag2 = gradient(x, y + 1);
+                        break;
+                    case 3:  // Diagonal edge (Northwest-Southeast)
+                        mag1 = gradient(x + 1, y - 1);
+                        mag2 = gradient(x - 1, y + 1);
+                        break;
                 }
-            } else if (dir >= 22.5 && dir < 67.5) {
-                if (edge(x, y) < edge(x - 1, y + 1) ||
-                    edge(x, y) < edge(x + 1, y - 1)) {
-                    edge(x, y) = 0;
-                }
-            } else if (dir >= 67.5 && dir < 112.5) {
-                if (edge(x, y) < edge(x - 1, y) ||
-                    edge(x, y) < edge(x + 1, y)) {
-                    edge(x, y) = 0;
-                }
-            } else {
-                if (edge(x, y) < edge(x - 1, y - 1) ||
-                    edge(x, y) < edge(x + 1, y + 1)) {
-                    edge(x, y) = 0;
+
+                // Retain pixel if its magnitude is greater than its neighbors
+                // along the gradient direction
+                if (magnitude > mag1 && magnitude > mag2) {
+                    edge(x, y) = magnitude;  // This pixel is a local maximum
+                } else {
+                    edge(x, y) = 0;  // Suppress pixel
                 }
             }
         }

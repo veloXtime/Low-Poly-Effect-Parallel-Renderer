@@ -39,7 +39,13 @@ int main(int argc, char* argv[]) {
                                                    1, 3, true);
     // CImg<unsigned char> blurredImage = image.blur(1.5);
 
+    // Apply edge extraction using CPU
+    start = chrono::high_resolution_clock::now();
     cimg_library::CImg<unsigned char> edge = extractEdgeCanny(blurredImage);
+    end = chrono::high_resolution_clock::now();
+    duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    cout << "Time taken for Edge Extraction: " << duration.count()
+         << " microseconds" << endl;
 
     // Display the original and blurred images
     cimg_library::CImgDisplay display(image, "Original Image");
