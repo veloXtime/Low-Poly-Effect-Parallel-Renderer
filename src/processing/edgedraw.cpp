@@ -45,7 +45,6 @@ CImg extractEdgeCanny(CImg &image, int method) {
 void gradientInGray(CImg &image, CImg &edge, CImgInt &direction) {
     // Convert the image to grayscale
     CImg grayImage(image.width(), image.height(), 1, 3, 0);
-    CImg edge(image.width(), image.height(), 1, 3, 0);
 
     cimg_forXY(image, x, y) {
         // Calculate the grayscale value of the pixel
