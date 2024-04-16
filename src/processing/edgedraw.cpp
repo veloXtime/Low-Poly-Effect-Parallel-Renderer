@@ -119,25 +119,21 @@ void nonMaxSuppression(CImg &edge, CImgInt &direction) {
 
             // Check the direction of the gradient
             if (dir >= 157.5 || dir < 22.5) {
-                // Check the magnitude of the gradient
                 if (edge(x, y) < edge(x, y + 1) ||
                     edge(x, y) < edge(x, y - 1)) {
                     edge(x, y) = 0;
                 }
             } else if (dir >= 22.5 && dir < 67.5) {
-                // Check the magnitude of the gradient
                 if (edge(x, y) < edge(x - 1, y + 1) ||
                     edge(x, y) < edge(x + 1, y - 1)) {
                     edge(x, y) = 0;
                 }
             } else if (dir >= 67.5 && dir < 112.5) {
-                // Check the magnitude of the gradient
                 if (edge(x, y) < edge(x - 1, y) ||
                     edge(x, y) < edge(x + 1, y)) {
                     edge(x, y) = 0;
                 }
             } else {
-                // Check the magnitude of the gradient
                 if (edge(x, y) < edge(x - 1, y - 1) ||
                     edge(x, y) < edge(x + 1, y + 1)) {
                     edge(x, y) = 0;
