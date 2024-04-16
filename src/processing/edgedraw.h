@@ -10,6 +10,7 @@ struct gradientResp {
     gradientResp(unsigned char _mag, int _dir) : mag(_mag), dir(_dir) {}
 };
 
-void gradientInGray(CImg &image, CImg &gradient, CImgInt &direction);
-void gradientInColor(CImg &image, CImg &gradient, CImgInt &direction);
+void gradientInGray(CImg &image, CImg &edge, CImgInt &direction);
+void gradientInColor(CImg &image, CImg &edge, CImgInt &direction);
 gradientResp calculateGradient(CImg &image, int x, int y);
+void nonMaxSuppression(CImg &edge, CImgInt &direction);

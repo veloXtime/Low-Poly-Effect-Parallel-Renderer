@@ -14,14 +14,14 @@
  */
 CImg extractEdgeCanny(CImg &image, int method) {
     // Create a new image to store the edge
-    CImg gradient(image.width(), image.height());
+    CImg edge(image.width(), image.height());
     CImgInt direction(image.width(), image.height());
 
     // Calculate gradient magnitude for each pixel
     if (method == 0) {
-        gradientInGray(image, gradient, direction);
+        gradientInGray(image, edge, direction);
     } else {
-        gradientInColor(image, gradient, direction);
+        gradientInColor(image, edge, direction);
     }
 
     // print the gradient
@@ -33,14 +33,16 @@ CImg extractEdgeCanny(CImg &image, int method) {
     //     }
     // }
 
-    // TODO: Non-maximum Suppression
-    return gradient;
+    // Non-maximum Suppression
+    nonMaxSuppression(edge, direction);
+
+    return edge;
 }
 
 /**
  * Convert colored image to grayscale and calculate gradient
  */
-void gradientInGray(CImg &image, CImg &gradient, CImgInt &direction) {
+void gradientInGray(CImg &image, CImg &edge, CImgInt &direction) {
     // Convert the image to grayscale
     CImg grayImage(image.width(), image.height(), 1, 3, 0);
     CImg edge(image.width(), image.height(), 1, 3, 0);
@@ -61,7 +63,7 @@ void gradientInGray(CImg &image, CImg &gradient, CImgInt &direction) {
         if (x > 0 && x < grayImage.width() - 1 && y > 0 &&
             y < grayImage.height() - 1) {
             gradientResp gr = calculateGradient(grayImage, x, y);
-            gradient(x, y) = gr.mag;
+            edge(x, y) = gr.mag;
             direction(x, y) = gr.dir;
         }
     }
@@ -70,7 +72,7 @@ void gradientInGray(CImg &image, CImg &gradient, CImgInt &direction) {
 /**
  * Calculate gradient separately in RGB dimension and combine
  */
-void gradientInColor(CImg &image, CImg &gradient, CImgInt &direction) {
+void gradientInColor(CImg &image, CImg &edge, CImgInt &direction) {
     // TODO: Implement this function
     std::cout << "Error: Function not implemented" << std::endl;
 }
@@ -98,4 +100,49 @@ gradientResp calculateGradient(CImg &image, int x, int y) {
     // Calculate the magnitude of the gradient
     return gradientResp(sqrt(gradientX * gradientX + gradientY * gradientY),
                         atan2(gradientY, gradientX) * 180 / M_PI);
+}
+
+/**
+ * Apply non-maximum suppression to the gradient image
+ */
+void nonMaxSuppression(CImg &edge, CImgInt &direction) {
+    cimg_forXY(edge, x, y) {
+        // If the pixel is not at the edge of the image
+        if (x > 0 && x < edge.width() - 1 && y > 0 && y < edge.height() - 1) {
+            // Get the direction of the gradient
+            int dir = direction(x, y);
+
+            // Check the direction of the gradient
+            if (dir < 0) {
+                dir += 180;
+            }
+
+            // Check the direction of the gradient
+            if (dir >= 157.5 || dir < 22.5) {
+                // Check the magnitude of the gradient
+                if (edge(x, y) < edge(x, y + 1) ||
+                    edge(x, y) < edge(x, y - 1)) {
+                    edge(x, y) = 0;
+                }
+            } else if (dir >= 22.5 && dir < 67.5) {
+                // Check the magnitude of the gradient
+                if (edge(x, y) < edge(x - 1, y + 1) ||
+                    edge(x, y) < edge(x + 1, y - 1)) {
+                    edge(x, y) = 0;
+                }
+            } else if (dir >= 67.5 && dir < 112.5) {
+                // Check the magnitude of the gradient
+                if (edge(x, y) < edge(x - 1, y) ||
+                    edge(x, y) < edge(x + 1, y)) {
+                    edge(x, y) = 0;
+                }
+            } else {
+                // Check the magnitude of the gradient
+                if (edge(x, y) < edge(x - 1, y - 1) ||
+                    edge(x, y) < edge(x + 1, y + 1)) {
+                    edge(x, y) = 0;
+                }
+            }
+        }
+    }
 }
