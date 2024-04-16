@@ -10,7 +10,7 @@ LIBS := -lpthread -lX11
 
 # Main executable
 main: main.o gaussianblur.o edgedraw.o
-	$(NVCC) $(CXXFLAGS) -o main main.o gaussianblur.o $(INCLUDE) $(LIBS)
+	$(NVCC) $(CXXFLAGS) -o main main.o gaussianblur.o edgedraw.o $(INCLUDE) $(LIBS)
 
 # Object files
 main.o: main.cpp processing.h
@@ -24,4 +24,4 @@ edgedraw.o: processing/edgedraw.cpp processing.h
 
 # Clean
 clean:
-	rm -f main main.o gaussianblur.o
+	rm -f main main.o gaussianblur.o edgedraw.o

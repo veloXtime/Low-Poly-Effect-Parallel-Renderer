@@ -10,7 +10,6 @@ struct Gradient {
 using CImg = cimg_library::CImg<unsigned char>;
 using CImgGradient = cimg_library::CImg<Gradient>;
 
-CImg extractEdgeCanny(CImg &image, int method = 0);
 void gradientInGray(CImg &image, CImgGradient &gradient);
 void gradientInColor(CImg &image, CImgGradient &gradient);
 Gradient calculateGradient(CImg &image, int x, int y);

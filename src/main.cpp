@@ -3,7 +3,6 @@
 
 #include "CImg.h"
 #include "processing.h"
-using namespace cimg_library;
 using namespace std;
 
 int main(int argc, char* argv[]) {
@@ -19,7 +18,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Load the image
-    CImg<unsigned char> image(imagePath.c_str());
+    cimg_library::CImg<unsigned char> image(imagePath.c_str());
 
     // Convert the image to a format compatible with CUDA function
     int width = image.width();
@@ -36,12 +35,15 @@ int main(int argc, char* argv[]) {
     cout << "Time taken for Gaussian blur: " << duration.count()
          << " microseconds" << endl;
 
-    CImg<unsigned char> blurredImage(outputImage, width, height, 1, 3, true);
+    cimg_library::CImg<unsigned char> blurredImage(outputImage, width, height,
+                                                   1, 3, true);
     // CImg<unsigned char> blurredImage = image.blur(1.5);
 
+    extractEdgeCanny(blurredImage);
+
     // Display the original and blurred images
-    CImgDisplay display(image, "Original Image");
-    CImgDisplay displayBlurred(blurredImage, "Blurred Image");
+    cimg_library::CImgDisplay display(image, "Original Image");
+    cimg_library::CImgDisplay displayBlurred(blurredImage, "Blurred Image");
     // Wait for the display windows to close
     while (!display.is_closed() && !displayBlurred.is_closed()) {
         display.wait();

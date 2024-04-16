@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "CImg.h"
+#include "processing.h"
 
 /**
  * Extract edges from the image using Canny edge detection method.
