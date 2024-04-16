@@ -23,6 +23,14 @@ CImg extractEdgeCanny(CImg &image, int method) {
         gradientInColor(image, gradient);
     }
 
+    // print the gradient
+    for (int i = 0; i < gradient.width(); i++) {
+        for (int j = 0; j < gradient.height(); j++) {
+            std::cout << "Gradient at (" << i << ", " << j
+                      << "): " << gradient(i, j).magnitude << std::endl;
+        }
+    }
+
     // TODO: Non-maximum Suppression
     return image;
 }
