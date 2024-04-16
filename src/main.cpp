@@ -39,15 +39,17 @@ int main(int argc, char* argv[]) {
                                                    1, 3, true);
     // CImg<unsigned char> blurredImage = image.blur(1.5);
 
-    extractEdgeCanny(blurredImage);
+    cimg_library::CImg<unsigned char> edge = extractEdgeCanny(blurredImage);
 
     // Display the original and blurred images
     cimg_library::CImgDisplay display(image, "Original Image");
     cimg_library::CImgDisplay displayBlurred(blurredImage, "Blurred Image");
+    cimg_library::CImgDisplay displayEdge(edge, "Edge Image");
     // Wait for the display windows to close
     while (!display.is_closed() && !displayBlurred.is_closed()) {
         display.wait();
         displayBlurred.wait();
+        displayEdge.wait();
     }
 
     // Free memory

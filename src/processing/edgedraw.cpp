@@ -14,33 +14,36 @@
  */
 CImg extractEdgeCanny(CImg &image, int method) {
     // Create a new image to store the edge
-    CImgGradient gradient(image.width(), image.height());
+    CImg gradient(image.width(), image.height());
+    CImgInt direction(image.width(), image.height());
 
     // Calculate gradient magnitude for each pixel
     if (method == 0) {
-        gradientInGray(image, gradient);
+        gradientInGray(image, gradient, direction);
     } else {
-        gradientInColor(image, gradient);
+        gradientInColor(image, gradient, direction);
     }
 
     // print the gradient
-    for (int i = 0; i < gradient.width(); i++) {
-        for (int j = 0; j < gradient.height(); j++) {
-            std::cout << "Gradient at (" << i << ", " << j
-                      << "): " << gradient(i, j).magnitude << std::endl;
-        }
-    }
+    // for (int i = 0; i < gradient.width(); i++) {
+    //     for (int j = 0; j < gradient.height(); j++) {
+    //         std::cout << "Gradient at (" << i << ", " << j
+    //                   << "): " << gradient(i, j).mag << "\t"
+    //                   << gradient(i, j).dir << std::endl;
+    //     }
+    // }
 
     // TODO: Non-maximum Suppression
-    return image;
+    return gradient;
 }
 
 /**
  * Convert colored image to grayscale and calculate gradient
  */
-void gradientInGray(CImg &image, CImgGradient &gradient) {
+void gradientInGray(CImg &image, CImg &gradient, CImgInt &direction) {
     // Convert the image to grayscale
     CImg grayImage(image.width(), image.height(), 1, 3, 0);
+    CImg edge(image.width(), image.height(), 1, 3, 0);
 
     cimg_forXY(image, x, y) {
         // Calculate the grayscale value of the pixel
@@ -57,7 +60,9 @@ void gradientInGray(CImg &image, CImgGradient &gradient) {
         // If the pixel is not at the edge of the image
         if (x > 0 && x < grayImage.width() - 1 && y > 0 &&
             y < grayImage.height() - 1) {
-            gradient(x, y) = calculateGradient(grayImage, x, y);
+            gradientResp gr = calculateGradient(grayImage, x, y);
+            gradient(x, y) = gr.mag;
+            direction(x, y) = gr.dir;
         }
     }
 }
@@ -65,7 +70,7 @@ void gradientInGray(CImg &image, CImgGradient &gradient) {
 /**
  * Calculate gradient separately in RGB dimension and combine
  */
-void gradientInColor(CImg &image, CImgGradient &gradient) {
+void gradientInColor(CImg &image, CImg &gradient, CImgInt &direction) {
     // TODO: Implement this function
     std::cout << "Error: Function not implemented" << std::endl;
 }
@@ -76,7 +81,7 @@ void gradientInColor(CImg &image, CImgGradient &gradient) {
  * @return Gradient magnitude of the pixel
  * @pre The pixel is not at the edge of the image.
  */
-Gradient calculateGradient(CImg &image, int x, int y) {
+gradientResp calculateGradient(CImg &image, int x, int y) {
     static const int SOBEL_X[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
     static const int SOBEL_Y[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
 
@@ -91,6 +96,6 @@ Gradient calculateGradient(CImg &image, int x, int y) {
     }
 
     // Calculate the magnitude of the gradient
-    return Gradient(sqrt(gradientX * gradientX + gradientY * gradientY),
-                    atan2(gradientY, gradientX));
+    return gradientResp(sqrt(gradientX * gradientX + gradientY * gradientY),
+                        atan2(gradientY, gradientX) * 180 / M_PI);
 }
