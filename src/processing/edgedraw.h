@@ -1,10 +1,10 @@
 #include "CImg.h"
 
 struct Gradient {
-    int val;
+    int mag;
     int dir;
 
-    Gradient(int _val = 0, int _dir = 0) : val(_val), dir(_dir) {}
+    Gradient(int _mag = 0, int _dir = 0) : mag(_mag), dir(_dir) {}
 };
 
 using CImg = cimg_library::CImg<unsigned char>;
