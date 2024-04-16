@@ -15,3 +15,5 @@ void gradientInColor(CImg &image, CImg &gradient, CImgShort &direction);
 gradientResp calculateGradient(CImg &image, int x, int y);
 void nonMaxSuppression(CImg &edge, CImg &gradient, CImgShort &direction);
 int discretizeDirection(short angle);
+void trackEdge(CImg &edge);
+void mark(CImg &edge, int x, int y, unsigned char lowThreshold);

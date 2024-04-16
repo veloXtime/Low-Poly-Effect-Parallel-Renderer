@@ -37,6 +37,9 @@ CImg extractEdgeCanny(CImg &image, int method) {
     CImg edge(image.width(), image.height());
     nonMaxSuppression(edge, gradient, direction);
 
+    // Track edges
+    trackEdge(edge);
+
     return edge;
 }
 
@@ -166,5 +169,35 @@ int discretizeDirection(short angle) {
     } else {
         std::cout << "Error: Angle out of range" << std::endl;
         return -1;
+    }
+}
+
+void trackEdge(CImg &edge) {
+    const unsigned char highThreshold = 100;
+    const unsigned char lowThreshold = 10;
+
+    cimg_forXY(edge, x, y) {
+        if (edge(x, y) >= highThreshold && edge(x, y) != 255) {
+            // Mark as a strong edge
+            mark(edge, x, y, lowThreshold);
+        } else if (edge(x, y) < lowThreshold) {
+            edge(x, y) = 0;  // Suppress noise
+        }
+    }
+}
+
+void mark(CImg &edge, int x, int y, unsigned char lowThreshold) {
+    edge(x, y) = 255;  // Mark as a strong edge
+
+    // Check 8-connected neighbors for weak edges
+    for (int dx = -1; dx <= 1; ++dx) {
+        for (int dy = -1; dy <= 1; ++dy) {
+            int nx = x + dx, ny = y + dy;
+            if (nx >= 0 && nx < edge.width() && ny >= 0 && ny < edge.height() &&
+                edge(nx, ny) != 255 && edge(nx, ny) >= lowThreshold) {
+                // Recursively mark weak edges
+                mark(edge, nx, ny, lowThreshold);
+            }
+        }
     }
 }
