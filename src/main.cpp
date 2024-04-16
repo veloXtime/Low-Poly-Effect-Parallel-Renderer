@@ -6,11 +6,17 @@
 using namespace cimg_library;
 using namespace std;
 
-int main() {
-    // Ask the user to enter the path to the image
-    cout << "Enter the path to the image: ";
+int main(int argc, char* argv[]) {
     string imagePath;
-    getline(cin, imagePath);  // Read the entire line, including spaces
+
+    // Try to get from commandl line arguments
+    if (argc > 1) {
+        imagePath = argv[1];
+    } else {
+        // Ask the user to enter the path to the image
+        cout << "Enter the path to the image: ";
+        getline(cin, imagePath);  // Read the entire line, including spaces
+    }
 
     // Load the image
     CImg<unsigned char> image(imagePath.c_str());
