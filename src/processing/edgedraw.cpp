@@ -155,6 +155,9 @@ void nonMaxSuppression(CImg &edge, CImg &gradient, CImgFloat &direction) {
 }
 
 int discretizeDirection(float angle) {
+    if (angle < 180) {
+        angle += 180;
+    }
     if ((angle < 22.5 && angle >= -22.5) || angle >= 157.5 || angle < -157.5) {
         return 0;
     } else if ((angle >= 22.5 && angle < 67.5) ||
@@ -188,8 +191,8 @@ void trackEdge(CImg &edge) {
 
     // Calculate high and low thresholds according to mean and standard
     // deviation
-    unsigned char highThreshold = mean + stdDev;
-    unsigned char lowThreshold = mean + 0.5 * stdDev;
+    unsigned char highThreshold = mean + 2 * stdDev;
+    unsigned char lowThreshold = mean + 1 * stdDev;
 
     cimg_forXY(edge, x, y) {
         if (edge(x, y) >= highThreshold && edge(x, y) != 255) {
