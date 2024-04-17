@@ -16,7 +16,7 @@ function App() {
       style={{
         paddingTop: "60px", // Adjust top padding to make space for the fixed TopBar
         minHeight: "100vh",
-        backgroundImage: gradient,
+        backgroundColor: grey[50],
         backgroundAttachment: "fixed",
         display: "flex",
         flexDirection: "column",
@@ -65,7 +65,7 @@ function App() {
           <Link
             href="https://github.com/veloXtime"
             underline="none"
-            color={indigo[300]}
+            color={indigo[800]}
           >
             Felicity Xu ,
           </Link>
@@ -80,7 +80,7 @@ function App() {
           <Link
             href="https://github.com/aow-otto"
             underline="none"
-            color={indigo[300]}
+            color={indigo[800]}
           >
             Ao Wang
           </Link>

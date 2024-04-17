@@ -65,10 +65,20 @@ const TopBar: React.FC<TopBarProps> = ({ overviewRef, scheduleRef }) => {
       >
         Proposal
       </StyledButton>
+      <StyledButton
+        disableElevation
+        onClick={() =>
+          handleButtonClick(
+            "https://veloxtime.github.io/Low-Poly-Effect-Parallel-Renderer/15618_Project_Pro.pdf"
+          )
+        }
+      >
+        Milestone
+      </StyledButton>
       <Button
         variant="contained"
         disableElevation
-        style={{ width: "100px", backgroundColor: indigo[500] }}
+        style={{ width: "100px", backgroundColor: indigo[800] }}
         onClick={() =>
           handleButtonClick(
             "https://github.com/veloXtime/Low-Poly-Effect-Parallel-Renderer"

@@ -26,7 +26,7 @@ function TaskItem(props: { task: Task }) {
         tabIndex={-1}
         disableRipple
         style={{
-          color: indigo[400],
+          color: indigo[800],
           margin: "0px",
           marginRight: "20px",
           padding: "0px",
@@ -79,12 +79,8 @@ export default function Schedule() {
       week: "Week 3: April 7 - April 13",
       tasks: [
         {
-          task: "Wrap up edge drawing algorithm, including vertices finding. This is the basic version of our edge drawing step.",
-          completed: false,
-        },
-        {
-          task: "Attempt a basic version of delaunay algorithm and test the baseline performance.",
-          completed: false,
+          task: "Wrap up basic edge drawing algorithm, including vertices finding. This is the basic version of our edge drawing step.",
+          completed: true,
         },
       ],
     },
@@ -92,20 +88,28 @@ export default function Schedule() {
       week: "Week 4: April 14 - April 20",
       tasks: [
         {
-          task: "Refine the edge drawing step parallelization to increase speedup.",
+          task: "Transform edge-drawing step to use CUDA. (Felicity)",
           completed: false,
         },
         {
-          task: "Refine the final color applying step, this part should be straightforward.",
+          task: "Refine edge detection quality. (Otto)",
           completed: false,
         },
       ],
     },
     {
-      week: "Week 5: April 21 - April 27",
+      week: "Week 5: April 21 - April 24",
       tasks: [
         {
-          task: "Refine the Delaunay triangulation step parallelization to increase speedup to our goal.",
+          task: "Attempt on Delaunay triangulation algorithm (Felicity & Otto)",
+          completed: false,
+        },
+        {
+          task: "Refine the Delaunay triangulation step parallelization to increase speedup to our goal. (Felicity & Otto)",
+          completed: false,
+        },
+        {
+          task: "Refine edge detection quality. (Otto)",
           completed: false,
         },
       ],
@@ -114,7 +118,15 @@ export default function Schedule() {
       week: "Week 6: April 28 - May 4",
       tasks: [
         {
-          task: "Collect statistics, final refinements and complete final report.",
+          task: "Integrate all 4 steps of the rendering process (Felicity)",
+          completed: false,
+        },
+        {
+          task: "Collect statistics, final refinements and complete final report. (Otto)",
+          completed: false,
+        },
+        {
+          task: "Create poster and demo. (Feliicty & Otto)",
           completed: false,
         },
       ],
@@ -135,8 +147,8 @@ export default function Schedule() {
       <Typography
         variant="h5"
         style={{
-          color: indigo[500],
-          fontWeight: 500,
+          color: indigo[800],
+          fontWeight: 600,
           textAlign: "left",
           marginBottom: "20px",
         }}

@@ -17,7 +17,7 @@ export default function Overview() {
       <Typography
         variant="h5"
         style={{
-          color: indigo[500],
+          color: indigo[800],
           fontFamily: "helvetica",
           fontWeight: 500,
           textAlign: "left",
