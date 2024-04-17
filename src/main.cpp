@@ -5,10 +5,54 @@
 #include "processing.h"
 using namespace std;
 
+unsigned char* applyGaussianBlur(cimg_library::CImg<unsigned char>& image) {
+    int width = image.width();
+    int height = image.height();
+    unsigned char* inputImage = image.data();
+    int channels = image.spectrum();
+
+    // Apply Gaussian blur using CUDA
+    auto start = chrono::high_resolution_clock::now();
+
+    unsigned char* outputImage =
+        gaussianBlur(inputImage, width, height, channels);
+
+    auto end = chrono::high_resolution_clock::now();
+
+    // Get duration
+    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    cout << "Time taken for Gaussian blur: " << duration.count()
+         << " microseconds" << endl;
+
+    return outputImage;
+}
+
+unsigned char* applyGaussianBlurCPU(cimg_library::CImg<unsigned char>& image) {
+    int width = image.width();
+    int height = image.height();
+    unsigned char* inputImage = image.data();
+    int channels = image.spectrum();
+
+    // Apply Gaussian blur using CUDA
+    auto start = chrono::high_resolution_clock::now();
+
+    unsigned char* outputImage =
+        gaussianBlurCPU(inputImage, width, height, channels);
+
+    auto end = chrono::high_resolution_clock::now();
+
+    // Get duration
+    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    cout << "Time taken for Gaussian blur: " << duration.count()
+         << " microseconds" << endl;
+
+    return outputImage;
+}
+
 int main(int argc, char* argv[]) {
     string imagePath;
 
-    // Try to get from commandl line arguments
+    // Get image path from commandline or cin
     if (argc > 1) {
         imagePath = argv[1];
     } else {
@@ -20,24 +64,10 @@ int main(int argc, char* argv[]) {
     // Load the image
     cimg_library::CImg<unsigned char> image(imagePath.c_str());
 
-    // Convert the image to a format compatible with CUDA function
-    int width = image.width();
-    int height = image.height();
-    unsigned char* inputImage = image.data();
-    int channels = image.spectrum();
-
-    // Apply Gaussian blur using CUDA
-    auto start = chrono::high_resolution_clock::now();
-    unsigned char* outputImage =
-        gaussianBlur(inputImage, width, height, channels);
-    auto end = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-    cout << "Time taken for Gaussian blur: " << duration.count()
-         << " microseconds" << endl;
-
-    cimg_library::CImg<unsigned char> blurredImage(outputImage, width, height,
-                                                   1, 3, true);
-    // CImg<unsigned char> blurredImage = image.blur(1.5);
+    // Step 1: perform the Gaussian blur
+    unsigned char* gbImage = applyGaussianBlur(image);
+    cimg_library::CImg<unsigned char> blurredImage(gbImage, width, height, 1, 3,
+                                                   true);
 
     // Apply edge extraction using CPU
     start = chrono::high_resolution_clock::now();
@@ -60,7 +90,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Free memory
-    delete[] outputImage;
+    delete[] gbImage;
 
     return 0;
 }

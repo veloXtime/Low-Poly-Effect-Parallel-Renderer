@@ -63,7 +63,7 @@ __global__ void gaussian_blur_kernel(const unsigned char* inputImage,
  */
 double* gaussianKernel(int radius, int sigma) {
     int kernelWidth = 2 * radius + 1;
-    double kernel[kernelWidth * kernelWidth] =
+    double* kernel =
         (double*)malloc(sizeof(double) * kernelWidth * kernelWidth);
     double sum = 0.0;
     // Populate every position in the kernel with the respective Gaussian
@@ -89,7 +89,8 @@ double* gaussianKernel(int radius, int sigma) {
 }
 
 /**
- * Gaussian blur function that takes an input image and returns blurred image
+ * Gaussian blur function that takes an input image and returns blurred
+ * image
  * @param inputImage input image
  * @param width width of input image
  * @param height height of input image
@@ -97,38 +98,18 @@ double* gaussianKernel(int radius, int sigma) {
  */
 unsigned char* gaussianBlur(const unsigned char* inputImage, int width,
                             int height, int channels) {
+    // Create Gaussian blur kernel
     int kernelWidth = 2 * BLUR_RADIUS + 1;
     double* kernel = gaussianKernel(BLUR_RADIUS, BLUR_SIGMA);
-    double sum = 0.0;
-    // Populate every position in the kernel with the respective Gaussian
-    // distribution value
-    for (int x = -BLUR_RADIUS; x <= BLUR_RADIUS; x++) {
-        for (int y = -BLUR_RADIUS; y <= BLUR_RADIUS; y++) {
-            double expNumerator = -(x * x + y * y);
-            double expDenominator = 2.0 * BLUR_SIGMA * BLUR_SIGMA;
-            double eExpression = exp(expNumerator / expDenominator);
-            double kernelValue =
-                eExpression / (2.0 * M_PI * BLUR_SIGMA * BLUR_SIGMA);
-            size_t index = (x + BLUR_RADIUS) * kernelWidth + y + BLUR_RADIUS;
-            kernel[index] = kernelValue;
-            sum += kernelValue;
-        }
-    }
-
-    // Normalize the kernel
-    for (int i = 0; i < kernelWidth * kernelWidth; i++) {
-        kernel[i] /= sum;
-    }
-
     // Copy kernel to constant memory
     cudaMemcpyToSymbol(kernelConstant, kernel,
                        sizeof(double) * kernelWidth * kernelWidth);
 
-    unsigned char* outputImage = (unsigned char*)malloc(
-        sizeof(unsigned char) * width * height * channels);
+    // Allocate memory for output image
+    int imageDataSize = sizeof(unsigned char) * width * height * channels;
+    unsigned char* outputImage = (unsigned char*)malloc(imageDataSize);
 
     // Allocate device memory
-    int imageDataSize = sizeof(unsigned char) * width * height * channels;
     unsigned char* inputImageDevice;
     unsigned char* outputImageDevice;
     cudaMalloc(&inputImageDevice, imageDataSize);
@@ -136,10 +117,12 @@ unsigned char* gaussianBlur(const unsigned char* inputImage, int width,
                cudaMemcpyHostToDevice);
     cudaMalloc(&outputImageDevice, imageDataSize);
 
-    // CUDA memory allocation and kernel invocation
+    // CUDA memory allocation
     dim3 blockSize(16, 16);
     dim3 gridSize((width + blockSize.x - 1) / blockSize.x,
                   (height + blockSize.y - 1) / blockSize.y);
+
+    // Kernel invocation
     gaussian_blur_kernel<<<gridSize, blockSize>>>(
         inputImageDevice, outputImageDevice, width, height, kernelWidth,
         channels);
@@ -148,9 +131,56 @@ unsigned char* gaussianBlur(const unsigned char* inputImage, int width,
     cudaMemcpy(outputImage, outputImageDevice, imageDataSize,
                cudaMemcpyDeviceToHost);
 
-    // Free device memory
+    // Free device memory and kernel
     cudaFree(inputImageDevice);
     cudaFree(outputImageDevice);
+    free(kernel);
+
+    return outputImage;
+}
+
+/**
+ * CPU version of Gaussian blur, used as a baseline for testing performance
+ * @param inputImage input image
+ * @param width width of input image
+ * @param height height of input image
+ * @param channels number of color channels input image has
+ */
+unsigned char* gaussianBlurCPU(const unsigned char* inputImage, int width,
+                               int height, int channels) {
+    // Create Gaussian kernel
+    int kernelWidth = 2 * BLUR_RADIUS + 1;
+    double* kernel = gaussianKernel(BLUR_RADIUS, BLUR_SIGMA);
+    unsigned char* outputImage = (unsigned char*)malloc(
+        sizeof(unsigned char) * width * height * channels);
+
+    // Convolve over the input image
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            for (int c = 0; c < channels; ++c) {
+                double sum = 0.0f;
+
+                for (int i = -BLUR_RADIUS; i <= BLUR_RADIUS; ++i) {
+                    for (int j = -BLUR_RADIUS; j <= BLUR_RADIUS; ++j) {
+                        int newRow = min(max(row + i, 0), height - 1);
+                        int newCol = min(max(col + j, 0), width - 1);
+                        int newIdx =
+                            c * width * height + newRow * width + newCol;
+
+                        double weight = kernel[(i + BLUR_RADIUS) * kernelWidth +
+                                               (j + BLUR_RADIUS)];
+                        sum += double(inputImage[newIdx]) * weight;
+                    }
+                }
+
+                outputImage[c * width * height + row * width + col] =
+                    static_cast<unsigned char>(sum);
+            }
+        }
+    }
+
+    // Free Gaussian kernel
+    free(kernel);
 
     return outputImage;
 }
