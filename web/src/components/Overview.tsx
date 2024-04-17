@@ -19,7 +19,7 @@ export default function Overview() {
         style={{
           color: indigo[800],
           fontFamily: "helvetica",
-          fontWeight: 500,
+          fontWeight: 600,
           textAlign: "left",
           marginBottom: "20px",
         }}
