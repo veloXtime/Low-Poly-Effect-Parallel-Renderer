@@ -15,7 +15,7 @@
 CImg extractEdgeCanny(CImg &image, int method) {
     // Create a new image to store the edge
     CImg gradient(image.width(), image.height());
-    CImgShort direction(image.width(), image.height());
+    CImgFloat direction(image.width(), image.height());
 
     // Calculate gradient magnitude for each pixel
     if (method == 0) {
@@ -46,7 +46,7 @@ CImg extractEdgeCanny(CImg &image, int method) {
 /**
  * Convert colored image to grayscale and calculate gradient
  */
-void gradientInGray(CImg &image, CImg &gradient, CImgShort &direction) {
+void gradientInGray(CImg &image, CImg &gradient, CImgFloat &direction) {
     // Convert the image to grayscale
     CImg grayImage(image.width(), image.height(), 1, 1, 0);
 
@@ -75,7 +75,7 @@ void gradientInGray(CImg &image, CImg &gradient, CImgShort &direction) {
 /**
  * Calculate gradient separately in RGB dimension and combine
  */
-void gradientInColor(CImg &image, CImg &gradient, CImgShort &direction) {
+void gradientInColor(CImg &image, CImg &gradient, CImgFloat &direction) {
     // TODO: Implement this function
     std::cout << "Error: Function not implemented" << std::endl;
 }
@@ -108,13 +108,13 @@ gradientResp calculateGradient(CImg &image, int x, int y) {
 /**
  * Apply non-maximum suppression to the gradient image
  */
-void nonMaxSuppression(CImg &edge, CImg &gradient, CImgShort &direction) {
+void nonMaxSuppression(CImg &edge, CImg &gradient, CImgFloat &direction) {
     cimg_forXY(edge, x, y) {
         // If the pixel is not at the edge of the image
         if (x > 0 && x < edge.width() - 1 && y > 0 && y < edge.height() - 1) {
             if (x > 0 && x < edge.width() - 1 && y > 0 &&
                 y < edge.height() - 1) {
-                short angle = direction(x, y);  // Get the continuous angle
+                float angle = direction(x, y);  // Get the continuous angle
                 int dir = discretizeDirection(
                     angle);  // Discretize the angle into four main directions
 
@@ -154,7 +154,7 @@ void nonMaxSuppression(CImg &edge, CImg &gradient, CImgShort &direction) {
     }
 }
 
-int discretizeDirection(short angle) {
+int discretizeDirection(float angle) {
     if ((angle < 22.5 && angle >= -22.5) || angle >= 157.5 || angle < -157.5) {
         return 0;
     } else if ((angle >= 22.5 && angle < 67.5) ||
