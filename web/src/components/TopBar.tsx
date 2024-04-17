@@ -59,17 +59,17 @@ const TopBar: React.FC<TopBarProps> = ({ overviewRef, scheduleRef }) => {
         disableElevation
         onClick={() =>
           handleButtonClick(
-            "https://veloxtime.github.io/Low-Poly-Effect-Parallel-Renderer/15618_Project_Proposal.pdf"
+            process.env.PUBLIC_URL + "/15618_Project_Proposal.pdf"
           )
         }
       >
-        Proposal
+        Milestone
       </StyledButton>
       <StyledButton
         disableElevation
         onClick={() =>
           handleButtonClick(
-            "https://veloxtime.github.io/Low-Poly-Effect-Parallel-Renderer/15618_Project_Pro.pdf"
+            process.env.PUBLIC_URL + "/15618_Milestone_Report.pdf"
           )
         }
       >
