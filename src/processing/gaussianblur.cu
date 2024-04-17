@@ -10,7 +10,7 @@
 
 const int THREAD_PER_BLK = 256;
 const double GAUSSIAN_BLUR_SIGMA = 1.5;
-const int GAUSSIAN_BLUR_RADIUS = 5;
+const int GAUSSIAN_BLUR_RADIUS = 2;
 
 __constant__ double kernelConstant[(2 * GAUSSIAN_BLUR_RADIUS + 1) *
                                    (2 * GAUSSIAN_BLUR_RADIUS + 1)];

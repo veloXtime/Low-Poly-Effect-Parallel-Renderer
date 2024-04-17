@@ -48,7 +48,7 @@ CImg extractEdgeCanny(CImg &image, int method) {
  */
 void gradientInGray(CImg &image, CImg &gradient, CImgFloat &direction) {
     // Convert the image to grayscale
-    CImg grayImage(image.width(), image.height(), 1, 1, 0);
+    CImg grayImage(image.width(), image.height());
 
     cimg_forXY(image, x, y) {
         // Calculate the grayscale value of the pixel
@@ -144,7 +144,7 @@ void nonMaxSuppression(CImg &edge, CImg &gradient, CImgFloat &direction) {
 
                 // Retain pixel if its magnitude is greater than its neighbors
                 // along the gradient direction
-                if (magnitude > mag1 && magnitude > mag2) {
+                if (magnitude >= mag1 && magnitude >= mag2) {
                     edge(x, y) = magnitude;  // This pixel is a local maximum
                 } else {
                     edge(x, y) = 0;  // Suppress pixel
@@ -173,8 +173,8 @@ int discretizeDirection(float angle) {
 }
 
 void trackEdge(CImg &edge) {
-    const unsigned char highThreshold = 100;
-    const unsigned char lowThreshold = 10;
+    const unsigned char highThreshold = 60;
+    const unsigned char lowThreshold = 30;
 
     cimg_forXY(edge, x, y) {
         if (edge(x, y) >= highThreshold && edge(x, y) != 255) {
@@ -182,6 +182,13 @@ void trackEdge(CImg &edge) {
             mark(edge, x, y, lowThreshold);
         } else if (edge(x, y) < lowThreshold) {
             edge(x, y) = 0;  // Suppress noise
+        }
+    }
+
+    // Clear unselected edges
+    cimg_forXY(edge, x, y) {
+        if (edge(x, y) != 255) {
+            edge(x, y) = 0;
         }
     }
 }
