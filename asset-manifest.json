@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/Low-Poly-Effect-Parallel-Renderer/static/css/main.29babc46.css",
-    "main.js": "/Low-Poly-Effect-Parallel-Renderer/static/js/main.9ca4c2d1.js",
+    "main.js": "/Low-Poly-Effect-Parallel-Renderer/static/js/main.86d33ae3.js",
     "static/js/453.d9ccc320.chunk.js": "/Low-Poly-Effect-Parallel-Renderer/static/js/453.d9ccc320.chunk.js",
     "index.html": "/Low-Poly-Effect-Parallel-Renderer/index.html",
     "main.29babc46.css.map": "/Low-Poly-Effect-Parallel-Renderer/static/css/main.29babc46.css.map",
-    "main.9ca4c2d1.js.map": "/Low-Poly-Effect-Parallel-Renderer/static/js/main.9ca4c2d1.js.map",
+    "main.86d33ae3.js.map": "/Low-Poly-Effect-Parallel-Renderer/static/js/main.86d33ae3.js.map",
     "453.d9ccc320.chunk.js.map": "/Low-Poly-Effect-Parallel-Renderer/static/js/453.d9ccc320.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.29babc46.css",
-    "static/js/main.9ca4c2d1.js"
+    "static/js/main.86d33ae3.js"
   ]
 }
