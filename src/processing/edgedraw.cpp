@@ -173,8 +173,23 @@ int discretizeDirection(float angle) {
 }
 
 void trackEdge(CImg &edge) {
-    const unsigned char highThreshold = 60;
-    const unsigned char lowThreshold = 30;
+    // Calculate mean and standard deviation of the gradient magnitude
+    unsigned int sum = 0;
+    unsigned int sumSq = 0;
+    unsigned int numPixels = edge.width() * edge.height();
+
+    cimg_forXY(edge, x, y) { sum += edge(x, y); }
+    unsigned float mean = sum / numPixels;
+
+    cimg_forXY(edge, x, y) {
+        sumSq += (edge(x, y) - mean) * (edge(x, y) - mean);
+    }
+    unsigned float stdDev = sqrt(sumSq / numPixels);
+
+    // Calculate high and low thresholds according to mean and standard
+    // deviation
+    unsigned char highThreshold = mean + stdDev;
+    unsigned char lowThreshold = mean + 0.5 * stdDev;
 
     cimg_forXY(edge, x, y) {
         if (edge(x, y) >= highThreshold && edge(x, y) != 255) {
