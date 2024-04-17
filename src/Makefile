@@ -19,7 +19,7 @@ main.o: main.cpp processing.h
 gaussianblur.o: processing/gaussianblur.cu processing.h
 	$(NVCC) $(CXXFLAGS) -c processing/gaussianblur.cu $(INCLUDE)
 
-edgedraw.o: processing/edgedraw.cpp processing.h
+edgedraw.o: processing/edgedraw.cpp processing.h edgedraw.h
 	$(CXX) $(CXXFLAGS) -c processing/edgedraw.cpp $(INCLUDE)
 
 # Clean

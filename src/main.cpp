@@ -52,7 +52,8 @@ int main(int argc, char* argv[]) {
     cimg_library::CImgDisplay displayBlurred(blurredImage, "Blurred Image");
     cimg_library::CImgDisplay displayEdge(edge, "Edge Image");
     // Wait for the display windows to close
-    while (!display.is_closed() && !displayBlurred.is_closed()) {
+    while (!display.is_closed() && !displayBlurred.is_closed() &&
+           !displayEdge.is_closed()) {
         display.wait();
         displayBlurred.wait();
         displayEdge.wait();

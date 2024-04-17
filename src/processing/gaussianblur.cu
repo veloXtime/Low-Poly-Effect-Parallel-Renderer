@@ -33,7 +33,7 @@ __global__ void gaussian_blur_kernel(const unsigned char* inputImage,
                      ++j) {
                     int newRow = min(max(row + i, 0), height - 1);
                     int newCol = min(max(col + j, 0), width - 1);
-                    int newIdx = (newRow * width + newCol) * channels + c;
+                    int newIdx = c * width * height + newRow * width + newCol;
 
                     float weight = kernelConstant[(i + GAUSSIAN_BLUR_RADIUS) *
                                                       kernelWidth +
@@ -42,7 +42,8 @@ __global__ void gaussian_blur_kernel(const unsigned char* inputImage,
                 }
             }
 
-            outputImage[idx + c] = static_cast<unsigned char>(sum);
+            outputImage[c * width * height + row * width + col] =
+                static_cast<unsigned char>(sum);
         }
     }
 }
