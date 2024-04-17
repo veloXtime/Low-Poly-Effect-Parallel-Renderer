@@ -63,7 +63,7 @@ const TopBar: React.FC<TopBarProps> = ({ overviewRef, scheduleRef }) => {
           )
         }
       >
-        Milestone
+        Proposal
       </StyledButton>
       <StyledButton
         disableElevation
