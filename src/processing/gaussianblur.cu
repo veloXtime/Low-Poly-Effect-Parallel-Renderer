@@ -9,8 +9,8 @@
 #include "processing.h"
 
 const int THREAD_PER_BLK = 256;
-const double BLUR_SIGMA = 1.5;
-const int BLUR_RADIUS = 5;
+const double BLUR_SIGMA = 2;
+const int BLUR_RADIUS = 6;
 
 // The constant Gaussian kernel that reside in Global GPU memory
 __constant__ double
@@ -155,8 +155,9 @@ unsigned char* gaussianBlurCPU(const unsigned char* inputImage, int width,
         sizeof(unsigned char) * width * height * channels);
 
     // Convolve over the input image
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
+        // for (int i = 0; i < 300; i++) {
+    for (int row = 0; row < height; row++) {
+        for (int col = 0; col < width; col++) {
             for (int c = 0; c < channels; ++c) {
                 double sum = 0.0f;
 
@@ -178,6 +179,7 @@ unsigned char* gaussianBlurCPU(const unsigned char* inputImage, int width,
             }
         }
     }
+        // }
 
     // Free Gaussian kernel
     free(kernel);
