@@ -173,8 +173,8 @@ int discretizeDirection(float angle) {
 }
 
 void trackEdge(CImg &edge) {
-    const unsigned char highThreshold = 60;
-    const unsigned char lowThreshold = 30;
+    const unsigned char highThreshold = 80;
+    const unsigned char lowThreshold = 20;
 
     cimg_forXY(edge, x, y) {
         if (edge(x, y) >= highThreshold && edge(x, y) != 255) {
