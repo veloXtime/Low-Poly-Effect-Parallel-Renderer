@@ -9,8 +9,8 @@ INCLUDE := -I. -I/CImg.h
 LIBS := -lpthread -lX11
 
 # Main executable
-main: main.o gaussianblur.o edgedetect.o
-	$(NVCC) $(CXXFLAGS) -o main main.o gaussianblur.o edgedetect.o $(INCLUDE) $(LIBS)
+main: main.o gaussianblur.o edgedetect.o edgedraw.o
+	$(NVCC) $(CXXFLAGS) -o main main.o gaussianblur.o edgedetect.o edgedraw.o $(INCLUDE) $(LIBS)
 
 # Object files
 main.o: main.cpp processing.h
@@ -22,6 +22,9 @@ gaussianblur.o: processing/gaussianblur.cu processing.h
 edgedetect.o: processing/edgedetect.cpp processing.h processing/edgedetect.h
 	$(CXX) $(CXXFLAGS) -c processing/edgedetect.cpp $(INCLUDE)
 
+edgedraw.o: processing/edgedraw.cpp processing.h 
+	$(CXX) $(CXXFLAGS) -c processing/edgedraw.cpp $(INCLUDE)
+
 # Clean
 clean:
-	rm -f main main.o gaussianblur.o edgedetect.o
+	rm -f main main.o gaussianblur.o edgedetect.o edgedraw.o

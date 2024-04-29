@@ -4,17 +4,27 @@
 #include "processing.h"
 
 using CImg = cimg_library::CImg<unsigned char>;
-using CImgBool = cimg_library::CImg<boolean>;
+using CImgBool = cimg_library::CImg<bool>;
+using CImgFloat = cimg_library::CImg<float>;
 const int ANCHOR_THRESH = 8;
-const int GRADIENT_THRESH = 100;
+const int GRADIENT_THRESH = 30;
 
 /** Apply a threshold to the gradient map to suppress weak gradients. */
-CImg suppressWeakGradients(const CImg &gradient) {
+void suppressWeakGradients(CImg &gradient) {
     cimg_forXY(gradient, x, y) {
-        if (gradient(x, y) > GRADIENT_THRESH) {
-            gradient(x, y) = 255;  // Consider as strong edge (retain)
+        if (gradient(x, y) <= GRADIENT_THRESH) {
+            gradient(x, y) = 0;
+        }
+    }
+}
+
+/** Apply a threshold to the gradient map to suppress weak gradients. */
+void getEdgePoints(CImg &gradient, CImgBool &edge) {
+    cimg_forXY(gradient, x, y) {
+        if (edge(x, y)) {
+            gradient(x, y) = 255;
         } else {
-            gradient(x, y) = 0;  // Consider as weak edge (suppress)
+            gradient(x, y) = 0;
         }
     }
 }
@@ -28,36 +38,37 @@ int isHorizontal(float angle) {
     }
 }
 
+// Check if a valid coordinate on the image
+bool valid(int x, int y, int width, int height) {
+    return !(x < 0 || y < 0 || x >= width || y >= height);
+}
+
 /**
  * Test if a pixel is an anchor, set anchor(x,y) to true.
  */
 void isAnchor(CImg &gradient, CImgFloat &direction, CImgBool &anchor) {
     cimg_forXY(anchor, x, y) {
         // If the pixel is not at the edge of the image
+        anchor(x, y) = false;
         if (x > 0 && x < anchor.width() - 1 && y > 0 &&
-            y < anchor.height() - 1) {
-            if (x > 0 && x < anchor.width() - 1 && y > 0 &&
-                y < anchor.height() - 1) {
-                float angle = direction(x, y);  // Get the continuous angle
-                unsigned char magnitude = gradient(x, y);
-                unsigned char mag1 = 0, mag2 = 0;
+            y < anchor.height() - 1 && x % 2 == 0 && y % 2 == 0) {
+            float angle = direction(x, y);  // Get the continuous angle
+            unsigned char magnitude = gradient(x, y);
+            unsigned char mag1 = 0, mag2 = 0;
 
-                if (isHorizontal(angle)) {
-                    mag1 = gradient(x - 1, y);
-                    mag2 = gradient(x + 1, y);
-                } else {
-                    mag1 = gradient(x, y - 1);
-                    mag2 = gradient(x, y + 1);
-                }
+            if (isHorizontal(angle)) {
+                mag1 = gradient(x, y - 1);
+                mag2 = gradient(x, y + 1);
+               } else {
+                mag1 = gradient(x - 1, y);
+                mag2 = gradient(x + 1, y);
+            }
 
-                // Retain pixel if its magnitude is greater than its neighbors
-                // along the gradient direction
-                if (magnitude - mag1 >= ANCHOR_THRESH &&
-                    magnitude - mag2 >= ANCHOR_THRESH) {
-                    anchor(x, y) = true;  // This pixel is a local maximum
-                } else {
-                    anchor(x, y) = false;  // Suppress pixel
-                }
+            // Retain pixel if its magnitude is greater than its neighbors
+            // along the gradient direction
+            if (magnitude - mag1 >= ANCHOR_THRESH &&
+                magnitude - mag2 >= ANCHOR_THRESH) {
+                anchor(x, y) = true;  // This pixel is a local maximum
             }
         }
     }
@@ -65,11 +76,14 @@ void isAnchor(CImg &gradient, CImgFloat &direction, CImgBool &anchor) {
 
 void drawHorizontalEdgeFromAnchor(int x, int y, CImg &gradient,
                                   CImgFloat &direction, CImgBool &edge) {
+    int width = gradient.width();
+    int height = gradient.height();
     int curr_x = x;
     int curr_y = y;
     edge(x, y) = false;
     while (gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
-           isHorizontal(direction(x, y))) {
+           isHorizontal(direction(x, y)) &&
+           valid(curr_x, curr_y, width, height)) {
         edge(curr_x, curr_y) = true;
         float leftUp = gradient(curr_x - 1, curr_y - 1);
         float left = gradient(curr_x - 1, curr_y);
@@ -86,11 +100,12 @@ void drawHorizontalEdgeFromAnchor(int x, int y, CImg &gradient,
         }
     }
 
-    int curr_x = x;
-    int curr_y = y;
+    curr_x = x;
+    curr_y = y;
     edge(x, y) = false;
     while (gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
-           isHorizontal(direction(x, y))) {
+           isHorizontal(direction(x, y)) &&
+           valid(curr_x, curr_y, width, height)) {
         edge(curr_x, curr_y) = true;
         float rightUp = gradient(curr_x - 1, curr_y - 1);
         float right = gradient(curr_x - 1, curr_y);
@@ -108,17 +123,19 @@ void drawHorizontalEdgeFromAnchor(int x, int y, CImg &gradient,
     }
 }
 
-void drawVerticalEdgeFromAnchor(int x, int y, CImg<unsigned char> &gradient,
-                                CImgFloat &direction,
-                                CImg<unsigned char> &edge) {
+void drawVerticalEdgeFromAnchor(int x, int y, CImg &gradient,
+                                CImgFloat &direction, CImgBool &edge) {
+    int width = gradient.width();
+    int height = gradient.height();
     int curr_x = x;
     int curr_y = y;
-    edge(x, y) = 255;  // Assuming white edges on a black background
+    edge(x, y) = false;  // Assuming white edges on a black background
 
     // Trace upwards from the anchor point
     while (gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
-           !isHorizontal(direction(curr_x, curr_y))) {
-        edge(curr_x, curr_y) = 255;  // Mark this pixel as part of an edge
+           !isHorizontal(direction(curr_x, curr_y)) &&
+           valid(curr_x, curr_y, width, height)) {
+        edge(curr_x, curr_y) = true;  // Mark this pixel as part of an edge
         float upLeft = gradient(curr_x - 1, curr_y - 1);
         float up = gradient(curr_x, curr_y - 1);
         float upRight = gradient(curr_x + 1, curr_y - 1);
@@ -139,11 +156,13 @@ void drawVerticalEdgeFromAnchor(int x, int y, CImg<unsigned char> &gradient,
     // Reset to anchor point
     curr_x = x;
     curr_y = y;
+    edge(x, y) = false;
 
     // Trace downwards from the anchor point
     while (gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
-           !isHorizontal(direction(curr_x, curr_y))) {
-        edge(curr_x, curr_y) = 255;  // Mark this pixel as part of an edge
+           !isHorizontal(direction(curr_x, curr_y)) &&
+           valid(curr_x, curr_y, width, height)) {
+        edge(curr_x, curr_y) = true;  // Mark this pixel as part of an edge
         float downLeft = gradient(curr_x - 1, curr_y + 1);
         float down = gradient(curr_x, curr_y + 1);
         float downRight = gradient(curr_x + 1, curr_y + 1);
@@ -163,7 +182,8 @@ void drawVerticalEdgeFromAnchor(int x, int y, CImg<unsigned char> &gradient,
 }
 
 void drawEdgeFromAnchor(int x, int y, CImg &gradient, CImgFloat &direction,
-                        CImg &edge) {
+                        CImgBool &edge) {
+   
     // Starting at the anchor, if left
     if (isHorizontal(direction(x, y))) {
         drawHorizontalEdgeFromAnchor(x, y, gradient, direction, edge);
@@ -176,23 +196,32 @@ CImg edgeDraw(CImg &image, int method) {
     // Create a new image to store the edge
     CImg gradient(image.width(), image.height());
     CImgFloat direction(image.width(), image.height());
-
     // Calculate gradient magnitude for each pixel
     if (method == 0) {
         gradientInGray(image, gradient, direction);
     } else {
         gradientInColor(image, gradient, direction);
     }
+    suppressWeakGradients(gradient);
 
-    // Non-maximum Suppression
     CImgBool edge(image.width(), image.height());
-    CImgBool anchors(image.width(), image.height());
+    // Initialize all points to be not edge
+    cimg_forXY(gradient, x, y) { edge(x, y) = false; }
+
+    CImgBool anchor(image.width(), image.height());
+
 
     // Find anchors
     isAnchor(gradient, direction, anchor);
 
-    // Route edge
-    suppressWeakGradients(gradient);
+/*
+    getEdgePoints(gradient, anchor);
+    cimg_library::CImgDisplay displayEdge(gradient, "Edge Image");
+    while (!displayEdge.is_closed()) {
+        displayEdge.wait();
+    }
+    */
+
 
     // Track edges
     cimg_forXY(anchor, x, y) {
@@ -200,6 +229,8 @@ CImg edgeDraw(CImg &image, int method) {
             drawEdgeFromAnchor(x, y, gradient, direction, edge);
         }
     }
+
+    getEdgePoints(gradient, edge);
 
     return gradient;
 }

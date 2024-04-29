@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     // gbImage = applyGaussianBlurCPU(image, width, height, channels);
     cimg_library::CImg<unsigned char> blurredImage(gbImage, width, height, 1, 3,
                                                    true);
-
+    std::cout << "before apply edge extraction" << std::endl;
     // Apply edge extraction using CPU
     auto start = chrono::high_resolution_clock::now();
     cimg_library::CImg<unsigned char> edge = edgeDraw(blurredImage);

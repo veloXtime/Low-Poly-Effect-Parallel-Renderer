@@ -1,6 +1,8 @@
 #ifndef PROCESSING_H
 #define PROCESSING_H
 #include "CImg.h"
+
+
 unsigned char* gaussianBlurCPU(const unsigned char* inputImage, int width,
                                int height, int channels);
 unsigned char* gaussianBlur(const unsigned char* inputImage, int width,
@@ -13,4 +15,7 @@ cimg_library::CImg<unsigned char> extractEdgeCanny(
 
 cimg_library::CImg<unsigned char> edgeDraw(
     cimg_library::CImg<unsigned char>& image, int method = 0);
+
+void gradientInGray(cimg_library::CImg<unsigned char> &image, cimg_library::CImg<unsigned char> &gradient, cimg_library::CImg<float> &direction);
+void gradientInColor(cimg_library::CImg<unsigned char> &image, cimg_library::CImg<unsigned char> &gradient, cimg_library::CImg<float> &direction);
 #endif

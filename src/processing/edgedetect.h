@@ -10,8 +10,6 @@ struct gradientResp {
     gradientResp(float _mag, float _dir) : mag(_mag), dir(_dir) {}
 };
 
-void gradientInGray(CImg &image, CImg &gradient, CImgFloat &direction);
-void gradientInColor(CImg &image, CImg &gradient, CImgFloat &direction);
 gradientResp calculateGradient(CImg &image, int x, int y);
 void nonMaxSuppression(CImg &edge, CImg &gradient, CImgFloat &direction);
 int discretizeDirection(float angle);
