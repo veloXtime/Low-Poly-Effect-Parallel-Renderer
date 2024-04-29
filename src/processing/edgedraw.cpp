@@ -40,6 +40,9 @@ CImg extractEdgeCanny(CImg &image, int method) {
     // Track edges
     trackEdge(edge);
 
+    // Sample edge points
+    sampleEdge(edge, 3);
+
     return edge;
 }
 
@@ -222,6 +225,39 @@ void mark(CImg &edge, int x, int y, unsigned char lowThreshold) {
                 edge(nx, ny) != 255 && edge(nx, ny) >= lowThreshold) {
                 // Recursively mark weak edges
                 mark(edge, nx, ny, lowThreshold);
+            }
+        }
+    }
+}
+
+/**
+ * Divide the edge image into small blocks, and sample the edge pixels by
+ * selecting the pixel with average coordinate among all edge points in each
+ * block.
+ */
+void sampleEdge(CImg &edge, int sampleRate) {
+    for (int x = 0; x < edge.width(); x += sampleRate) {
+        for (int y = 0; y < edge.height(); y += sampleRate) {
+            // Find the average coordinate of edge pixels in the block
+            int sumX = 0, sumY = 0, count = 0;
+            for (int dx = 0; dx < sampleRate; ++dx) {
+                for (int dy = 0; dy < sampleRate; ++dy) {
+                    int nx = x + dx, ny = y + dy;
+                    if (nx < edge.width() && ny < edge.height() &&
+                        edge(nx, ny)) {
+                        sumX += nx;
+                        sumY += ny;
+                        count++;
+
+                        // Clear the edge pixel
+                        edge(nx, ny) = 0;
+                    }
+                }
+            }
+
+            // Set the average coordinate as the edge point
+            if (count > 0) {
+                edge(sumX / count, sumY / count) = 255;
             }
         }
     }
