@@ -10,4 +10,7 @@ cimg_library::CImg<unsigned char> extractEdge(
 
 cimg_library::CImg<unsigned char> extractEdgeCanny(
     cimg_library::CImg<unsigned char>& image, int method = 0);
+
+cimg_library::CImg<unsigned char> edgeDraw(
+    cimg_library::CImg<unsigned char>& image, int method = 0);
 #endif

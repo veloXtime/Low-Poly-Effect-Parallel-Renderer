@@ -5,26 +5,26 @@
 #include "processing.h"
 using namespace std;
 
-unsigned char* applyGaussianBlur(cimg_library::CImg<unsigned char>& image, int width, int height, int channels) {
-
+unsigned char* applyGaussianBlur(cimg_library::CImg<unsigned char>& image,
+                                 int width, int height, int channels) {
     // Apply Gaussian blur using CUDA
     auto start = std::chrono::high_resolution_clock::now();
 
-    unsigned char* outputImage =
-        gaussianBlur(image, width, height, channels);
+    unsigned char* outputImage = gaussianBlur(image, width, height, channels);
 
     auto end = std::chrono::high_resolution_clock::now();
 
     // Get duration
-    auto duration = std::chrono::duration_cast<chrono::microseconds>(end - start);
+    auto duration =
+        std::chrono::duration_cast<chrono::microseconds>(end - start);
     cout << "Time taken for Gaussian blur: " << duration.count()
          << " microseconds" << endl;
 
     return outputImage;
 }
 
-unsigned char* applyGaussianBlurCPU(cimg_library::CImg<unsigned char>& image, int width, int height, int channels) {
-
+unsigned char* applyGaussianBlurCPU(cimg_library::CImg<unsigned char>& image,
+                                    int width, int height, int channels) {
     // Apply Gaussian blur using CUDA
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -34,7 +34,8 @@ unsigned char* applyGaussianBlurCPU(cimg_library::CImg<unsigned char>& image, in
     auto end = std::chrono::high_resolution_clock::now();
 
     // Get duration
-    auto duration = std::chrono::duration_cast<chrono::microseconds>(end - start);
+    auto duration =
+        std::chrono::duration_cast<chrono::microseconds>(end - start);
     cout << "Time taken for Gaussian blur CPU: " << duration.count()
          << " microseconds" << endl;
 
@@ -68,7 +69,7 @@ int main(int argc, char* argv[]) {
 
     // Apply edge extraction using CPU
     auto start = chrono::high_resolution_clock::now();
-    cimg_library::CImg<unsigned char> edge = extractEdgeCanny(blurredImage);
+    cimg_library::CImg<unsigned char> edge = edgeDraw(blurredImage);
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
     cout << "Time taken for Edge Extraction: " << duration.count()
