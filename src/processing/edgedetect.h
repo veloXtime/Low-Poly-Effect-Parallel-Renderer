@@ -4,10 +4,10 @@ using CImg = cimg_library::CImg<unsigned char>;
 using CImgFloat = cimg_library::CImg<float>;
 
 struct gradientResp {
-    unsigned char mag;
+    float mag;
     float dir;
 
-    gradientResp(unsigned char _mag, float _dir) : mag(_mag), dir(_dir) {}
+    gradientResp(float _mag, float _dir) : mag(_mag), dir(_dir) {}
 };
 
 void gradientInGray(CImg &image, CImg &gradient, CImgFloat &direction);
