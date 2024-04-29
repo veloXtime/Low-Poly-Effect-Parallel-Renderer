@@ -158,9 +158,6 @@ void nonMaxSuppression(CImg &edge, CImg &gradient, CImgFloat &direction) {
 }
 
 int discretizeDirection(float angle) {
-    if (angle < 180) {
-        angle += 180;
-    }
     if ((angle < 22.5 && angle >= -22.5) || angle >= 157.5 || angle < -157.5) {
         return 0;
     } else if ((angle >= 22.5 && angle < 67.5) ||

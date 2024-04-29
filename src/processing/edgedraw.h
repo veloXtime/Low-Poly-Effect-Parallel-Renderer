@@ -17,3 +17,4 @@ void nonMaxSuppression(CImg &edge, CImg &gradient, CImgFloat &direction);
 int discretizeDirection(float angle);
 void trackEdge(CImg &edge);
 void mark(CImg &edge, int x, int y, unsigned char lowThreshold);
+void sampleEdge(CImg &edge, int sampleRate);
