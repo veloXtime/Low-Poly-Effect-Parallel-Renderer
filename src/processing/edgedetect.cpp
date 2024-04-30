@@ -1,5 +1,3 @@
-#include "edgedetect.h"
-
 #include <iostream>
 
 #include "CImg.h"
