@@ -4,7 +4,7 @@
 #include "processing.h"
 
 const int ANCHOR_THRESH = 8;
-const int GRADIENT_THRESH = 40;
+const int GRADIENT_THRESH = 30;
 
 /**
  * Suppress weak gradients in the image by setting pixels below a certain
@@ -14,21 +14,6 @@ const int GRADIENT_THRESH = 40;
 void suppressWeakGradients(CImg &gradient) {
     cimg_forXY(gradient, x, y) {
         if (gradient(x, y) <= GRADIENT_THRESH) {
-            gradient(x, y) = 0;
-        }
-    }
-}
-
-/**
- * Mark edge points in the gradient image.
- * @param gradient The gradient image used to mark edge points.
- * @param edge The binary image where edges will be marked as true.
- */
-void markEdgePoints(CImg &gradient, CImgBool &edge) {
-    cimg_forXY(gradient, x, y) {
-        if (edge(x, y)) {
-            gradient(x, y) = 255;
-        } else {
             gradient(x, y) = 0;
         }
     }
@@ -72,7 +57,7 @@ void determineAnchors(const CImg &gradient, const CImgFloat &direction,
         // If the pixel is not at the edge of the image
         anchor(x, y) = false;
         if (x > 0 && x < anchor.width() - 1 && y > 0 &&
-            y < anchor.height() - 1 && x % 4 == 0 && y % 4 == 0) {
+            y < anchor.height() - 1 && x % 2 == 0 && y % 2 == 0) {
             float angle = direction(x, y);  // Get the continuous angle
             unsigned char magnitude = gradient(x, y);
             unsigned char mag1 = 0, mag2 = 0;
@@ -104,23 +89,18 @@ void determineAnchors(const CImg &gradient, const CImgFloat &direction,
  * @param edge Binary image to mark edges.
  */
 void drawHorizontalEdgeFromAnchor(int x, int y, const CImg &gradient,
-                                  const CImgFloat &direction, CImgBool &edge) {
-    std::cout << "horizontal " << x << " " << y << std::endl;
-
+                                  const CImgFloat &direction, CImg &edge) {
     int width = gradient.width();
     int height = gradient.height();
-    std::cout << "point 0" << std::endl;
     if (!valid(x, y, width, height) || edge(x, y)) return;
 
     int curr_x = x;
     int curr_y = y;
-    edge(x, y) = false;
-    std::cout << "point 1" << std::endl;
+    edge(x, y) = 0;
     while (valid(curr_x, curr_y, width, height) &&
            gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
            isHorizontal(direction(curr_x, curr_y))) {
-        std::cout << "point 2" << std::endl;
-        edge(curr_x, curr_y) = true;
+        edge(curr_x, curr_y) = 255;
         float leftUp = gradient(curr_x - 1, curr_y - 1);
         float left = gradient(curr_x - 1, curr_y);
         float leftDown = gradient(curr_x - 1, curr_y + 1);
@@ -139,11 +119,11 @@ void drawHorizontalEdgeFromAnchor(int x, int y, const CImg &gradient,
 
     curr_x = x;
     curr_y = y;
-    edge(x, y) = false;
+    edge(x, y) = 0;
     while (valid(curr_x, curr_y, width, height) &&
            gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
            isHorizontal(direction(curr_x, curr_y))) {
-        edge(curr_x, curr_y) = true;
+        edge(curr_x, curr_y) = 255;
         float rightUp = gradient(curr_x - 1, curr_y - 1);
         float right = gradient(curr_x - 1, curr_y);
         float rightDown = gradient(curr_x - 1, curr_y + 1);
@@ -170,24 +150,20 @@ void drawHorizontalEdgeFromAnchor(int x, int y, const CImg &gradient,
  * @param edge Binary image to mark edges.
  */
 void drawVerticalEdgeFromAnchor(int x, int y, const CImg &gradient,
-                                const CImgFloat &direction, CImgBool &edge) {
-    std::cout << "vertical " << x << " " << y << std::endl;
+                                const CImgFloat &direction, CImg &edge) {
     int width = gradient.width();
     int height = gradient.height();
-    std::cout << "point 8" << std::endl;
     if (!valid(x, y, width, height)) return;
 
     int curr_x = x;
     int curr_y = y;
-    edge(x, y) = false;  // Assuming white edges on a black background
-    std::cout << "point 9" << std::endl;
+    edge(x, y) = 0;  // Assuming white edges on a black background
 
     // Trace upwards from the anchor point
     while (valid(curr_x, curr_y, width, height) &&
            gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
            !isHorizontal(direction(curr_x, curr_y))) {
-        std::cout << "point 10" << std::endl;
-        edge(curr_x, curr_y) = true;  // Mark this pixel as part of an edge
+        edge(curr_x, curr_y) = 255;  // Mark this pixel as part of an edge
         float upLeft = gradient(curr_x - 1, curr_y - 1);
         float up = gradient(curr_x, curr_y - 1);
         float upRight = gradient(curr_x + 1, curr_y - 1);
@@ -209,13 +185,13 @@ void drawVerticalEdgeFromAnchor(int x, int y, const CImg &gradient,
     // Reset to anchor point
     curr_x = x;
     curr_y = y;
-    edge(x, y) = false;
+    edge(x, y) = 0;
 
     // Trace downwards from the anchor point
     while (valid(curr_x, curr_y, width, height) &&
            gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
            !isHorizontal(direction(curr_x, curr_y))) {
-        edge(curr_x, curr_y) = true;  // Mark this pixel as part of an edge
+        edge(curr_x, curr_y) = 255;  // Mark this pixel as part of an edge
         float downLeft = gradient(curr_x - 1, curr_y + 1);
         float down = gradient(curr_x, curr_y + 1);
         float downRight = gradient(curr_x + 1, curr_y + 1);
@@ -236,14 +212,23 @@ void drawVerticalEdgeFromAnchor(int x, int y, const CImg &gradient,
 }
 
 /**
- * Initiate edge drawing from any anchor points.
+ * Recursively draw edge from any an anchor point
+ *
+ * Say if anchor point direction is horizontal, then we need to proceed both to
+ * the left and to the right. Say if we proceed left first, we keep selecting
+ * immediate left neighbors which have largest gradient and horizontal
+ * direction. When we reach a point which has a vertical direction, then split
+ * again at this point and both proceed up and down. The procedure continues
+ * until we reach a point which either has 0 gradient or is an edge point.
+ *
+ * @param x The anchor point X-Coordinate
+ * @param y The anchor point Y-Coordinate
  * @param gradient The gradient image.
  * @param direction The gradient directions.
- * @param anchors Binary image with only anchor points set to true.
  * @param edge Binary image waiting for edges to be marked as true.
  */
 void drawEdgesFromAnchor(int x, int y, const CImg &gradient,
-                         const CImgFloat &direction, CImgBool &edge,
+                         const CImgFloat &direction, CImg &edge,
                          const bool isHorizontal) {
     // Check recursion base condition
     if (!valid(x, y, gradient.width(), gradient.height()) ||
@@ -266,10 +251,11 @@ void drawEdgesFromAnchor(int x, int y, const CImg &gradient,
  * @param edge Binary image waiting for edges to be marked as true.
  */
 void drawEdgesFromAnchors(const CImg &gradient, const CImgFloat &direction,
-                          const CImgBool &anchors, CImgBool &edge) {
+                          const CImgBool &anchors, CImg &edge) {
     cimg_forXY(anchors, x, y) {
         if (anchors(x, y)) {
-            drawEdgesFromAnchor(x, y, gradient, direction, edge, isHorizontal(direction(x, y)));
+            drawEdgesFromAnchor(x, y, gradient, direction, edge,
+                                isHorizontal(direction(x, y)));
         }
     }
 }
@@ -292,15 +278,12 @@ CImg edgeDraw(CImg &image, int method) {
     }
     suppressWeakGradients(gradient);
 
-    CImgBool edge(image.width(), image.height(), 1, 1, false);
+    CImg edge(image.width(), image.height(), 1, 1, 0);
     CImgBool anchor(image.width(), image.height(), 1, 1, false);
 
     // Find anchors and draw edges from anchors
     determineAnchors(gradient, direction, anchor);
     drawEdgesFromAnchors(gradient, direction, anchor, edge);
 
-    // Only take edge points
-    markEdgePoints(gradient, edge);
-
-    return gradient;
+    return edge;
 }

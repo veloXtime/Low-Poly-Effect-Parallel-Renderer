@@ -2,7 +2,7 @@
 #define PROCESSING_H
 #include "CImg.h"
 
-using CImg = cimg_library::CImg<unsigned char>;
+using CImg = CImg;
 using CImgBool = cimg_library::CImg<bool>;
 using CImgFloat = cimg_library::CImg<float>;
 
@@ -26,18 +26,16 @@ void nonMaxSuppression(CImg &edge, CImg &gradient, CImgFloat &direction);
 int discretizeDirection(float angle);
 void trackEdge(CImg &edge);
 void mark(CImg &edge, int x, int y, unsigned char lowThreshold);
+
 void drawEdgesFromAnchor(int x, int y, const CImg &gradient,
-                         const CImgFloat &direction, CImgBool &edge,
+                         const CImgFloat &direction, CImg &edge,
                          const bool isHorizontal);
 void drawHorizontalEdgeFromAnchor(int x, int y, const CImg &gradient,
-                                  const CImgFloat &direction, CImgBool &edge);
+                                  const CImgFloat &direction, CImg &edge);
 void drawVerticalEdgeFromAnchor(int x, int y, const CImg &gradient,
-                                const CImgFloat &direction, CImgBool &edge);
-cimg_library::CImg<unsigned char> extractEdge(
-    cimg_library::CImg<unsigned char> &image);
-cimg_library::CImg<unsigned char> extractEdgeCanny(
-    cimg_library::CImg<unsigned char> &image, int method = 0);
-cimg_library::CImg<unsigned char> edgeDraw(
-    cimg_library::CImg<unsigned char> &image, int method = 0);
+                                const CImgFloat &direction, CImg &edge);
+CImg extractEdge(CImg &image);
+CImg extractEdgeCanny(CImg &image, int method = 0);
+CImg edgeDraw(CImg &image, int method = 0);
 
 #endif
