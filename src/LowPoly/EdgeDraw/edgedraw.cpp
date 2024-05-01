@@ -1,10 +1,11 @@
+#include "edgedraw.h"
+
 #include <iostream>
 
 #include "CImg.h"
-#include "edgedraw.h"
 
-const int ANCHOR_THRESH = 8;
-const int GRADIENT_THRESH = 30;
+const unsigned char ANCHOR_THRESH = 8;
+const unsigned char GRADIENT_THRESH = 30;
 
 /**
  * Suppress weak gradients in the image by setting pixels below a certain
@@ -101,9 +102,9 @@ void drawHorizontalEdgeFromAnchor(int x, int y, const CImg &gradient,
            gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
            isHorizontal(direction(curr_x, curr_y))) {
         edge(curr_x, curr_y) = 255;
-        float leftUp = gradient(curr_x - 1, curr_y - 1);
-        float left = gradient(curr_x - 1, curr_y);
-        float leftDown = gradient(curr_x - 1, curr_y + 1);
+        unsigned char leftUp = gradient(curr_x - 1, curr_y - 1);
+        unsigned char left = gradient(curr_x - 1, curr_y);
+        unsigned char leftDown = gradient(curr_x - 1, curr_y + 1);
         // Move to the pixel with the highest gradient value
         if (leftUp > left && leftUp > leftDown) {
             curr_x -= 1;
@@ -124,9 +125,9 @@ void drawHorizontalEdgeFromAnchor(int x, int y, const CImg &gradient,
            gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
            isHorizontal(direction(curr_x, curr_y))) {
         edge(curr_x, curr_y) = 255;
-        float rightUp = gradient(curr_x - 1, curr_y - 1);
-        float right = gradient(curr_x - 1, curr_y);
-        float rightDown = gradient(curr_x - 1, curr_y + 1);
+        unsigned char rightUp = gradient(curr_x - 1, curr_y - 1);
+        unsigned char right = gradient(curr_x - 1, curr_y);
+        unsigned char rightDown = gradient(curr_x - 1, curr_y + 1);
         // Move to the pixel with the highest gradient value
         if (rightUp > right && rightUp > rightDown) {
             curr_x += 1;
@@ -164,9 +165,9 @@ void drawVerticalEdgeFromAnchor(int x, int y, const CImg &gradient,
            gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
            !isHorizontal(direction(curr_x, curr_y))) {
         edge(curr_x, curr_y) = 255;  // Mark this pixel as part of an edge
-        float upLeft = gradient(curr_x - 1, curr_y - 1);
-        float up = gradient(curr_x, curr_y - 1);
-        float upRight = gradient(curr_x + 1, curr_y - 1);
+        unsigned char upLeft = gradient(curr_x - 1, curr_y - 1);
+        unsigned char up = gradient(curr_x, curr_y - 1);
+        unsigned char upRight = gradient(curr_x + 1, curr_y - 1);
 
         // Move to the pixel with the highest gradient value above the current
         // pixel
@@ -192,9 +193,9 @@ void drawVerticalEdgeFromAnchor(int x, int y, const CImg &gradient,
            gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
            !isHorizontal(direction(curr_x, curr_y))) {
         edge(curr_x, curr_y) = 255;  // Mark this pixel as part of an edge
-        float downLeft = gradient(curr_x - 1, curr_y + 1);
-        float down = gradient(curr_x, curr_y + 1);
-        float downRight = gradient(curr_x + 1, curr_y + 1);
+        unsigned char downLeft = gradient(curr_x - 1, curr_y + 1);
+        unsigned char down = gradient(curr_x, curr_y + 1);
+        unsigned char downRight = gradient(curr_x + 1, curr_y + 1);
 
         // Move to the pixel with the highest gradient value below the current
         // pixel

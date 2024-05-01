@@ -1,1 +1,1 @@
-./main ./pics/testpic.jpeg
+./main ../images/emma.png

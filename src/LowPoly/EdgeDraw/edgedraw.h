@@ -8,8 +8,8 @@ using CImgBool = cimg_library::CImg<bool>;
 using CImgFloat = cimg_library::CImg<float>;
 
 struct gradientResp {
-    float mag;  // magnitude of gradient
-    float dir;  // direction of the gradient
+    unsigned char mag;  // magnitude of gradient
+    float dir;          // direction of the gradient
 
     gradientResp(float _mag, float _dir) : mag(_mag), dir(_dir) {}
 };
@@ -32,4 +32,10 @@ CImg extractEdge(CImg &image);
 CImg extractEdgeCanny(CImg &image, int method = 0);
 CImg edgeDraw(CImg &image, int method = 0);
 
+// Functions for edge draw GPU version
+void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction);
+CImg edgeDrawGPU(const CImg &image, int method = 0);
+
+// Functions for Delaunay triangulation
+void pickVertices(CImg &edge);
 #endif
