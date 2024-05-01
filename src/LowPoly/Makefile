@@ -4,7 +4,7 @@ CXXFLAGS=-O3
 LDFLAGS=-L/usr/local/cuda-11.7/lib64/ -lcudart
 NVCC=nvcc
 NVCCFLAGS=-O3 -m64 --gpu-architecture compute_61 -ccbin /usr/bin/gcc
-INCLUDE := -I. -ICImg.h -IDelaunay -IEdgeDraw -IGaussianBlur 
+INCLUDE := -I. -IDelaunay -IEdgeDraw -IGaussianBlur 
 # Libraries
 LIBS := -lpthread -lX11
 
