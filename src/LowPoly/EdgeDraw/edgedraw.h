@@ -11,7 +11,7 @@ struct gradientResp {
     unsigned char mag;  // magnitude of gradient
     float dir;          // direction of the gradient
 
-    gradientResp(float _mag, float _dir) : mag(_mag), dir(_dir) {}
+    gradientResp(unsigned char _mag, float _dir) : mag(_mag), dir(_dir) {}
 };
 void gradientInGray(CImg &image, CImg &gradient, CImgFloat &direction);
 void gradientInColor(CImg &image, CImg &gradient, CImgFloat &direction);

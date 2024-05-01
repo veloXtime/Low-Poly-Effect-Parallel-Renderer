@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
 
     // Apply edge extraction using CPU
     auto start = chrono::high_resolution_clock::now();
-    cimg_library::CImg<unsigned char> edge = edgeDraw(blurredImage);
+    cimg_library::CImg<unsigned char> edgeCPU = edgeDraw(blurredImage);
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
     cout << "Time taken for Edge Extraction (CPU): " << duration.count()
@@ -80,25 +80,27 @@ int main(int argc, char* argv[]) {
 
     // Apply edge extraction using GPU
     start = chrono::high_resolution_clock::now();
-    edge = edgeDrawGPU(blurredImage);
+    cimg_library::CImg<unsigned char> edgeGPU = edgeDrawGPU(blurredImage);
     end = chrono::high_resolution_clock::now();
     duration = chrono::duration_cast<chrono::microseconds>(end - start);
     cout << "Time taken for Edge Extraction (GPU): " << duration.count()
          << " microseconds" << endl;
 
     // Delaunay triangulation
-    pickVertices(edge);
+    // pickVertices(edge);
 
     // Display the original and blurred images
     cimg_library::CImgDisplay display(image, "Original Image");
     cimg_library::CImgDisplay displayBlurred(blurredImage, "Blurred Image");
-    cimg_library::CImgDisplay displayEdge(edge, "Edge Image");
+    cimg_library::CImgDisplay displayEdgeCPU(edgeCPU, "Edge Image CPU");
+    cimg_library::CImgDisplay displayEdgeGPU(edgeGPU, "Edge Image GPU");
     // Wait for the display windows to close
     while (!display.is_closed() && !displayBlurred.is_closed() &&
-           !displayEdge.is_closed()) {
+           !displayEdgeCPU.is_closed() && !displayEdgeGPU.is_closed()) {
         display.wait();
         displayBlurred.wait();
-        displayEdge.wait();
+        displayEdgeCPU.wait();
+        displayEdgeGPU.wait();
     }
 
     // Free memory
