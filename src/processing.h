@@ -2,7 +2,7 @@
 #define PROCESSING_H
 #include "CImg.h"
 
-using CImg = CImg;
+using CImg = cimg_library::CImg<unsigned char>;
 using CImgBool = cimg_library::CImg<bool>;
 using CImgFloat = cimg_library::CImg<float>;
 
@@ -38,4 +38,6 @@ CImg extractEdge(CImg &image);
 CImg extractEdgeCanny(CImg &image, int method = 0);
 CImg edgeDraw(CImg &image, int method = 0);
 
+// Functions for Delaunay triangulation
+void pickVertices(CImg &edge);
 #endif

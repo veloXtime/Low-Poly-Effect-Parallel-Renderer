@@ -285,8 +285,5 @@ CImg edgeDraw(CImg &image, int method) {
     determineAnchors(gradient, direction, anchor);
     drawEdgesFromAnchors(gradient, direction, anchor, edge);
 
-    // Sample edge points
-    sampleEdge(edge, 3);
-
     return edge;
 }

@@ -75,6 +75,9 @@ int main(int argc, char* argv[]) {
     cout << "Time taken for Edge Extraction: " << duration.count()
          << " microseconds" << endl;
 
+    // Delaunay triangulation
+    pickVertices(edge);
+    
     // Display the original and blurred images
     cimg_library::CImgDisplay display(image, "Original Image");
     cimg_library::CImgDisplay displayBlurred(blurredImage, "Blurred Image");
