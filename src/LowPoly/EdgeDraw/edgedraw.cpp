@@ -2,8 +2,6 @@
 
 #include <iostream>
 
-#include "CImg.h"
-
 const unsigned char ANCHOR_THRESH = 8;
 const unsigned char GRADIENT_THRESH = 30;
 
@@ -274,6 +272,28 @@ CImg edgeDraw(CImg &image, int method) {
     // Calculate gradient magnitude for each pixel
     if (method == 0) {
         gradientInGray(image, gradient, direction);
+    } else {
+        gradientInColor(image, gradient, direction);
+    }
+    suppressWeakGradients(gradient);
+
+    CImg edge(image.width(), image.height(), 1, 1, 0);
+    CImgBool anchor(image.width(), image.height(), 1, 1, false);
+
+    // Find anchors and draw edges from anchors
+    determineAnchors(gradient, direction, anchor);
+    drawEdgesFromAnchors(gradient, direction, anchor, edge);
+
+    return edge;
+}
+
+CImg edgeDrawGPU(CImg &image, int method) {
+    // Create a new image to store the edge
+    CImg gradient(image.width(), image.height());
+    CImgFloat direction(image.width(), image.height());
+    // Calculate gradient magnitude for each pixel
+    if (method == 0) {
+        gradientInGrayGPU(image, gradient, direction);
     } else {
         gradientInColor(image, gradient, direction);
     }

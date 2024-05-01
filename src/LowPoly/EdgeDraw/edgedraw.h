@@ -34,7 +34,7 @@ CImg edgeDraw(CImg &image, int method = 0);
 
 // Functions for edge draw GPU version
 void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction);
-CImg edgeDrawGPU(const CImg &image, int method = 0);
+CImg edgeDrawGPU(CImg &image, int method = 0);
 
 // Functions for Delaunay triangulation
 void pickVertices(CImg &edge);

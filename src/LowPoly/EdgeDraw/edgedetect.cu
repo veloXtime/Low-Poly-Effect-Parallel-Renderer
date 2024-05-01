@@ -2,11 +2,15 @@
 
 #include "edgedraw.h"
 
+__constant__ int sobel_x[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
+__constant__ int sobel_y[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
+
 __global__ void colorToGrayKernel(unsigned char *image,
                                   unsigned char *grayImage, int width,
                                   int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
+
     if (x < width && y < height) {
         int idx = (y * width + x) * 3;  // 3 channels per pixel
         unsigned char r = image[idx];
@@ -23,16 +27,20 @@ __global__ void gradientCalculationKernel(unsigned char *grayImage,
                                           int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
+
     if (x > 0 && x < width - 1 && y > 0 && y < height - 1) {
+        float gx = 0.0f, gy = 0.0f;
+
+        // Apply the Sobel filter
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                int pixel = grayImage[(y + j) * width + (x + i)];
+                gx += sobel_x[i + 1][j + 1] * pixel;
+                gy += sobel_y[i + 1][j + 1] * pixel;
+            }
+        }
+
         int idx = y * width + x;
-        int idx_left = idx - 1;
-        int idx_right = idx + 1;
-        int idx_up = idx - width;
-        int idx_down = idx + width;
-
-        float gx = grayImage[idx_right] - grayImage[idx_left];
-        float gy = grayImage[idx_down] - grayImage[idx_up];
-
         gradient[idx] = sqrtf(gx * gx + gy * gy);
         direction[idx] = atan2f(gy, gx);
     }

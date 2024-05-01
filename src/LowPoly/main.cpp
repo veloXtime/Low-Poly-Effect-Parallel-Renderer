@@ -2,10 +2,9 @@
 #include <iostream>
 
 #include "CImg.h"
-
-#include "gaussianblur.h"
-#include "edgedraw.h"
 #include "delaunay.h"
+#include "edgedraw.h"
+#include "gaussianblur.h"
 
 using namespace std;
 
@@ -76,12 +75,20 @@ int main(int argc, char* argv[]) {
     cimg_library::CImg<unsigned char> edge = edgeDraw(blurredImage);
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-    cout << "Time taken for Edge Extraction: " << duration.count()
+    cout << "Time taken for Edge Extraction (CPU): " << duration.count()
+         << " microseconds" << endl;
+
+    // Apply edge extraction using GPU
+    start = chrono::high_resolution_clock::now();
+    edge = edgeDrawGPU(blurredImage);
+    end = chrono::high_resolution_clock::now();
+    duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    cout << "Time taken for Edge Extraction (GPU): " << duration.count()
          << " microseconds" << endl;
 
     // Delaunay triangulation
     pickVertices(edge);
-    
+
     // Display the original and blurred images
     cimg_library::CImgDisplay display(image, "Original Image");
     cimg_library::CImgDisplay displayBlurred(blurredImage, "Blurred Image");
