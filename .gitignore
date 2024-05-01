@@ -1,2 +1,4 @@
 *.o
 src/main
+.vscode/*
+src/LowPoly/main
