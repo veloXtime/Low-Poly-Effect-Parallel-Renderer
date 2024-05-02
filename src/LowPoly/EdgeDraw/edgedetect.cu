@@ -30,20 +30,20 @@ __global__ void gradientCalculationKernel(unsigned char *grayImage,
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x > 0 && x < width - 1 && y > 0 && y < height - 1) {
-        int gx = 0, gy = 0;
+        int gradientX = 0, gradientY = 0;
 
         // Apply the Sobel filter
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
                 int pixel = grayImage[(y + j) * width + (x + i)];
-                gx += SOBEL_X[i + 1][j + 1] * pixel;
-                gy += SOBEL_Y[i + 1][j + 1] * pixel;
+                gradientX += SOBEL_X[i + 1][j + 1] * pixel;
+                gradientY += SOBEL_Y[i + 1][j + 1] * pixel;
             }
         }
 
         int idx = y * width + x;
-        gradient[idx] = sqrtf(gx * gx + gy * gy);
-        direction[idx] = atan2f(gy, gx);
+        gradient[idx] = sqrtf(gradientX * gradientX + gradientY * gradientY);
+        direction[idx] = atan2f(gradientY, gradientX) * 180 / M_PI;
     }
 }
 

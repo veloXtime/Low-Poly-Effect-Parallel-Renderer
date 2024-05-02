@@ -275,16 +275,17 @@ CImg edgeDraw(CImg &image, int method) {
     } else {
         gradientInColor(image, gradient, direction);
     }
-    suppressWeakGradients(gradient);
+    // suppressWeakGradients(gradient);
 
-    CImg edge(image.width(), image.height(), 1, 1, 0);
-    CImgBool anchor(image.width(), image.height(), 1, 1, false);
+    // CImg edge(image.width(), image.height(), 1, 1, 0);
+    // CImgBool anchor(image.width(), image.height(), 1, 1, false);
 
-    // Find anchors and draw edges from anchors
-    determineAnchors(gradient, direction, anchor);
-    drawEdgesFromAnchors(gradient, direction, anchor, edge);
+    // // Find anchors and draw edges from anchors
+    // determineAnchors(gradient, direction, anchor);
+    // drawEdgesFromAnchors(gradient, direction, anchor, edge);
 
-    return edge;
+    // return edge;
+    return gradient;
 }
 
 CImg edgeDrawGPU(CImg &image, int method) {
@@ -297,14 +298,15 @@ CImg edgeDrawGPU(CImg &image, int method) {
     } else {
         gradientInColor(image, gradient, direction);
     }
-    suppressWeakGradients(gradient);
+    // suppressWeakGradients(gradient);
 
-    CImg edge(image.width(), image.height(), 1, 1, 0);
-    CImgBool anchor(image.width(), image.height(), 1, 1, false);
+    // CImg edge(image.width(), image.height(), 1, 1, 0);
+    // CImgBool anchor(image.width(), image.height(), 1, 1, false);
 
-    // Find anchors and draw edges from anchors
-    determineAnchors(gradient, direction, anchor);
-    drawEdgesFromAnchors(gradient, direction, anchor, edge);
+    // // Find anchors and draw edges from anchors
+    // determineAnchors(gradient, direction, anchor);
+    // drawEdgesFromAnchors(gradient, direction, anchor, edge);
 
-    return edge;
+    // return edge;
+    return gradient;
 }
