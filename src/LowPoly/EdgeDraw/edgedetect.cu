@@ -4,7 +4,7 @@
 
 __constant__ int SOBEL_X[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
 __constant__ int SOBEL_Y[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
-__constant__ int SUPPRESS_THRESHOLD = GRADIENT_THRESH;
+__constant__ unsigned char SUPPRESS_THRESHOLD = GRADIENT_THRESH;
 __constant__ int ANCHORS_THRESHOLD = ANCHOR_THRESH;
 
 __global__ void colorToGrayKernel(unsigned char *image,
@@ -149,9 +149,8 @@ __global__ void determineAnchorsKernel(unsigned char *gradient,
     if (x > 0 && x < width - 1 && y > 0 && y < height - 1 && x % 2 == 0 &&
         y % 2 == 0) {
         float angle = direction[y * width + x];
-        // TODO: unsigned??
-        unsigned char magnitude = gradient[y * width + x];
-        unsigned char mag1 = 0, mag2 = 0;
+        int magnitude = gradient[y * width + x];
+        int mag1 = 0, mag2 = 0;
 
         if (isHorizontalCuda(angle)) {
             mag1 = gradient[(y - 1) * width + x];

@@ -7,7 +7,7 @@ using CImg = cimg_library::CImg<unsigned char>;
 using CImgBool = cimg_library::CImg<bool>;
 using CImgFloat = cimg_library::CImg<float>;
 
-const unsigned char ANCHOR_THRESH = 8;
+const int ANCHOR_THRESH = 8;
 const unsigned char GRADIENT_THRESH = 30;
 
 struct gradientResp {

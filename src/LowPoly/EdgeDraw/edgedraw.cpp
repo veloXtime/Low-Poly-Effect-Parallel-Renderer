@@ -55,9 +55,8 @@ void determineAnchors(const CImg &gradient, const CImgFloat &direction,
         if (x > 0 && x < anchor.width() - 1 && y > 0 &&
             y < anchor.height() - 1 && x % 2 == 0 && y % 2 == 0) {
             float angle = direction(x, y);  // Get the continuous angle
-            // TODO: unsigned??
-            unsigned char magnitude = gradient(x, y);
-            unsigned char mag1 = 0, mag2 = 0;
+            int magnitude = gradient(x, y);
+            int mag1 = 0, mag2 = 0;
 
             if (isHorizontal(angle)) {
                 mag1 = gradient(x, y - 1);
