@@ -20,11 +20,11 @@ void suppressWeakGradients(CImg &gradient) {
  * @param angle The angle of the gradient.
  * @return Returns 1 if horizontal, otherwise 0.
  */
-int isHorizontal(float angle) {
+bool isHorizontal(float angle) {
     if (angle < 45 && angle >= -45 || angle >= 136 || angle < -135) {
-        return 1;  // horizontal
+        return true;  // horizontal
     } else {
-        return 0;
+        return false;
     }
 }
 
@@ -55,6 +55,7 @@ void determineAnchors(const CImg &gradient, const CImgFloat &direction,
         if (x > 0 && x < anchor.width() - 1 && y > 0 &&
             y < anchor.height() - 1 && x % 2 == 0 && y % 2 == 0) {
             float angle = direction(x, y);  // Get the continuous angle
+            // TODO: unsigned??
             unsigned char magnitude = gradient(x, y);
             unsigned char mag1 = 0, mag2 = 0;
 
@@ -274,15 +275,15 @@ CImg edgeDraw(CImg &image, int method) {
     }
     suppressWeakGradients(gradient);
 
-    // CImg edge(image.width(), image.height(), 1, 1, 0);
-    // CImgBool anchor(image.width(), image.height(), 1, 1, false);
+    CImg edge(image.width(), image.height(), 1, 1, 0);
+    CImgBool anchor(image.width(), image.height(), 1, 1, false);
 
-    // // Find anchors and draw edges from anchors
-    // determineAnchors(gradient, direction, anchor);
-    // drawEdgesFromAnchors(gradient, direction, anchor, edge);
+    // Find anchors and draw edges from anchors
+    determineAnchors(gradient, direction, anchor);
+    drawEdgesFromAnchors(gradient, direction, anchor, edge);
 
     // return edge;
-    return gradient;
+    return edge;
 }
 
 CImg edgeDrawGPU(CImg &image, int method) {
@@ -297,13 +298,13 @@ CImg edgeDrawGPU(CImg &image, int method) {
     }
     suppressWeakGradientsGPU(gradient);
 
-    // CImg edge(image.width(), image.height(), 1, 1, 0);
-    // CImgBool anchor(image.width(), image.height(), 1, 1, false);
+    CImg edge(image.width(), image.height(), 1, 1, 0);
+    CImgBool anchor(image.width(), image.height(), 1, 1, false);
 
-    // // Find anchors and draw edges from anchors
-    // determineAnchors(gradient, direction, anchor);
-    // drawEdgesFromAnchors(gradient, direction, anchor, edge);
+    // Find anchors and draw edges from anchors
+    determineAnchorsGPU(gradient, direction, anchor);
+    drawEdgesFromAnchors(gradient, direction, anchor, edge);
 
     // return edge;
-    return gradient;
+    return edge;
 }

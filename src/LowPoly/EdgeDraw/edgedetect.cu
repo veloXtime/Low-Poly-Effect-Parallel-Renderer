@@ -5,6 +5,7 @@
 __constant__ int SOBEL_X[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
 __constant__ int SOBEL_Y[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
 __constant__ int SUPPRESS_THRESHOLD = GRADIENT_THRESH;
+__constant__ int ANCHORS_THRESHOLD = ANCHOR_THRESH;
 
 __global__ void colorToGrayKernel(unsigned char *image,
                                   unsigned char *grayImage, int width,
@@ -64,6 +65,8 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
     cudaMalloc(&d_direction, directionSize);
 
     cudaMemcpy(d_image, image.data(), imageSize, cudaMemcpyHostToDevice);
+    cudaMemset(d_gradient, 0, grayImageSize);
+    cudaMemset(d_direction, 0, directionSize);
 
     dim3 blockSize(16, 16);
     dim3 gridSize((width + blockSize.x - 1) / blockSize.x,
@@ -87,17 +90,18 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
     cudaFree(d_direction);
 }
 
-__global__ void suppressWeakGradientsKernel(unsigned char *gradient, int width, int height) {
+__global__ void suppressWeakGradientsKernel(unsigned char *gradient, int width,
+                                            int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     if (x < width && y < height) {
-        int idx = y * width + x;  // Index into the 1D array representation of the image
+        int idx = y * width +
+                  x;  // Index into the 1D array representation of the image
         if (gradient[idx] <= SUPPRESS_THRESHOLD) {
             gradient[idx] = 0;
         }
     }
 }
-
 
 void suppressWeakGradientsGPU(CImg &gradient) {
     int width = gradient.width(), height = gradient.height();
@@ -108,19 +112,99 @@ void suppressWeakGradientsGPU(CImg &gradient) {
     cudaMalloc(&d_gradient, numPixels * sizeof(unsigned char));
 
     // Copy data from host to device
-    cudaMemcpy(d_gradient, gradient.data(), numPixels * sizeof(unsigned char), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_gradient, gradient.data(), numPixels * sizeof(unsigned char),
+               cudaMemcpyHostToDevice);
 
     // Define block and grid sizes
     dim3 blockSize(16, 16);
-    dim3 gridSize((width + blockSize.x - 1) / blockSize.x, 
+    dim3 gridSize((width + blockSize.x - 1) / blockSize.x,
                   (height + blockSize.y - 1) / blockSize.y);
 
     // Launch the kernel
-    suppressWeakGradientsKernel<<<gridSize, blockSize>>>(d_gradient, width, height);
+    suppressWeakGradientsKernel<<<gridSize, blockSize>>>(d_gradient, width,
+                                                         height);
 
     // Copy the modified data back to the host
-    cudaMemcpy(gradient.data(), d_gradient, numPixels * sizeof(unsigned char), cudaMemcpyDeviceToHost);
+    cudaMemcpy(gradient.data(), d_gradient, numPixels * sizeof(unsigned char),
+               cudaMemcpyDeviceToHost);
 
     // Free GPU memory
     cudaFree(d_gradient);
+}
+
+__device__ bool isHorizontalCuda(float angle) {
+    if ((angle < 45 && angle >= -45) || angle >= 136 || angle < -135) {
+        return true;  // horizontal
+    } else {
+        return false;
+    }
+}
+
+__global__ void determineAnchorsKernel(unsigned char *gradient,
+                                       float *direction, bool *anchor,
+                                       int width, int height) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (x > 0 && x < width - 1 && y > 0 && y < height - 1 && x % 2 == 0 &&
+        y % 2 == 0) {
+        float angle = direction[y * width + x];
+        // TODO: unsigned??
+        unsigned char magnitude = gradient[y * width + x];
+        unsigned char mag1 = 0, mag2 = 0;
+
+        if (isHorizontalCuda(angle)) {
+            mag1 = gradient[(y - 1) * width + x];
+            mag2 = gradient[(y + 1) * width + x];
+        } else {
+            mag1 = gradient[y * width + (x - 1)];
+            mag2 = gradient[y * width + (x + 1)];
+        }
+
+        bool is_anchor = (magnitude - mag1 >= ANCHORS_THRESHOLD) &&
+                         (magnitude - mag2 >= ANCHORS_THRESHOLD);
+        anchor[y * width + x] = is_anchor;
+    }
+}
+
+void determineAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
+                         CImgBool &anchor) {
+    int width = gradient.width();
+    int height = gradient.height();
+    size_t numPixels = width * height;
+
+    // Device memory pointers
+    unsigned char *d_gradient;
+    float *d_direction;
+    bool *d_anchor;
+
+    // Allocate device memory
+    cudaMalloc(&d_gradient, numPixels * sizeof(unsigned char));
+    cudaMalloc(&d_direction, numPixels * sizeof(float));
+    cudaMalloc(&d_anchor, numPixels * sizeof(bool));
+
+    // Copy data to device
+    cudaMemcpy(d_gradient, gradient.data(), numPixels * sizeof(unsigned char),
+               cudaMemcpyHostToDevice);
+    cudaMemcpy(d_direction, direction.data(), numPixels * sizeof(float),
+               cudaMemcpyHostToDevice);
+    cudaMemset(d_anchor, 0, numPixels * sizeof(bool));
+
+    // Kernel launch parameters
+    dim3 blockSize(16, 16);
+    dim3 gridSize((width + blockSize.x - 1) / blockSize.x,
+                  (height + blockSize.y - 1) / blockSize.y);
+
+    // Launch kernel
+    determineAnchorsKernel<<<gridSize, blockSize>>>(d_gradient, d_direction,
+                                                    d_anchor, width, height);
+
+    // Copy results back to host
+    cudaMemcpy(anchor.data(), d_anchor, numPixels * sizeof(bool),
+               cudaMemcpyDeviceToHost);
+
+    // Free device memory
+    cudaFree(d_gradient);
+    cudaFree(d_direction);
+    cudaFree(d_anchor);
 }

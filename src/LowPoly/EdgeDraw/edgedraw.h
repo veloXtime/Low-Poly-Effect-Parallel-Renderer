@@ -38,6 +38,8 @@ CImg edgeDraw(CImg &image, int method = 0);
 // Functions for edge draw GPU version
 void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction);
 void suppressWeakGradientsGPU(CImg &gradient);
+void determineAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
+                         CImgBool &anchor);
 CImg edgeDrawGPU(CImg &image, int method = 0);
 
 // Functions for Delaunay triangulation
