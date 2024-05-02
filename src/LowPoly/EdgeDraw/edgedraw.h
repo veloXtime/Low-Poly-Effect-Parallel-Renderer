@@ -7,6 +7,9 @@ using CImg = cimg_library::CImg<unsigned char>;
 using CImgBool = cimg_library::CImg<bool>;
 using CImgFloat = cimg_library::CImg<float>;
 
+const unsigned char ANCHOR_THRESH = 8;
+const unsigned char GRADIENT_THRESH = 30;
+
 struct gradientResp {
     unsigned char mag;  // magnitude of gradient
     float dir;          // direction of the gradient
@@ -34,6 +37,7 @@ CImg edgeDraw(CImg &image, int method = 0);
 
 // Functions for edge draw GPU version
 void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction);
+void suppressWeakGradientsGPU(CImg &gradient);
 CImg edgeDrawGPU(CImg &image, int method = 0);
 
 // Functions for Delaunay triangulation

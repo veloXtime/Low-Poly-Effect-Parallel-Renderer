@@ -4,6 +4,7 @@
 
 __constant__ int SOBEL_X[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
 __constant__ int SOBEL_Y[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
+__constant__ int SUPPRESS_THRESHOLD = GRADIENT_THRESH;
 
 __global__ void colorToGrayKernel(unsigned char *image,
                                   unsigned char *grayImage, int width,
@@ -84,4 +85,42 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
     cudaFree(d_grayImage);
     cudaFree(d_gradient);
     cudaFree(d_direction);
+}
+
+__global__ void suppressWeakGradientsKernel(unsigned char *gradient, int width, int height) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    if (x < width && y < height) {
+        int idx = y * width + x;  // Index into the 1D array representation of the image
+        if (gradient[idx] <= SUPPRESS_THRESHOLD) {
+            gradient[idx] = 0;
+        }
+    }
+}
+
+
+void suppressWeakGradientsGPU(CImg &gradient) {
+    int width = gradient.width(), height = gradient.height();
+    size_t numPixels = width * height;
+    unsigned char *d_gradient;
+
+    // Allocate GPU memory
+    cudaMalloc(&d_gradient, numPixels * sizeof(unsigned char));
+
+    // Copy data from host to device
+    cudaMemcpy(d_gradient, gradient.data(), numPixels * sizeof(unsigned char), cudaMemcpyHostToDevice);
+
+    // Define block and grid sizes
+    dim3 blockSize(16, 16);
+    dim3 gridSize((width + blockSize.x - 1) / blockSize.x, 
+                  (height + blockSize.y - 1) / blockSize.y);
+
+    // Launch the kernel
+    suppressWeakGradientsKernel<<<gridSize, blockSize>>>(d_gradient, width, height);
+
+    // Copy the modified data back to the host
+    cudaMemcpy(gradient.data(), d_gradient, numPixels * sizeof(unsigned char), cudaMemcpyDeviceToHost);
+
+    // Free GPU memory
+    cudaFree(d_gradient);
 }

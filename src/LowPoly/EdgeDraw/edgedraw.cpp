@@ -2,9 +2,6 @@
 
 #include <iostream>
 
-const unsigned char ANCHOR_THRESH = 8;
-const unsigned char GRADIENT_THRESH = 30;
-
 /**
  * Suppress weak gradients in the image by setting pixels below a certain
  * threshold to zero.
@@ -275,7 +272,7 @@ CImg edgeDraw(CImg &image, int method) {
     } else {
         gradientInColor(image, gradient, direction);
     }
-    // suppressWeakGradients(gradient);
+    suppressWeakGradients(gradient);
 
     // CImg edge(image.width(), image.height(), 1, 1, 0);
     // CImgBool anchor(image.width(), image.height(), 1, 1, false);
@@ -298,7 +295,7 @@ CImg edgeDrawGPU(CImg &image, int method) {
     } else {
         gradientInColor(image, gradient, direction);
     }
-    // suppressWeakGradients(gradient);
+    suppressWeakGradientsGPU(gradient);
 
     // CImg edge(image.width(), image.height(), 1, 1, 0);
     // CImgBool anchor(image.width(), image.height(), 1, 1, false);
