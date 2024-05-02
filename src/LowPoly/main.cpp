@@ -57,7 +57,7 @@ CImg applyEdgeDetectionCPU(CImg& blurredImage) {
 
 CImg applyEdgeDetectionGPU(CImg& blurredImage) {
     auto start = chrono::high_resolution_clock::now();
-    cimg_library::CImg<unsigned char> edgeGPU = edgeDraw(blurredImage);
+    cimg_library::CImg<unsigned char> edgeGPU = edgeDrawGPU(blurredImage);
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
     cout << "Time taken for Edge Extraction (GPU): " << duration.count()
