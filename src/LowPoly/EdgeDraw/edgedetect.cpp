@@ -46,19 +46,19 @@ void gradientInGray(CImg &image, CImg &gradient, CImgFloat &direction) {
                                   0.114 * image(x, y, 2);
 
         // Set the grayscale value in the gray image
-        grayImage(x, y) = grayValue;
+        gradient(x, y) = grayValue;
     }
 
-    // Calculate the gradient in the grayscale image
-    cimg_forXY(grayImage, x, y) {
-        // If the pixel is not at the edge of the image
-        if (x > 0 && x < grayImage.width() - 1 && y > 0 &&
-            y < grayImage.height() - 1) {
-            gradientResp gr = calculateGradient(grayImage, x, y);
-            gradient(x, y) = gr.mag;
-            direction(x, y) = gr.dir;
-        }
-    }
+    // // Calculate the gradient in the grayscale image
+    // cimg_forXY(grayImage, x, y) {
+    //     // If the pixel is not at the edge of the image
+    //     if (x > 0 && x < grayImage.width() - 1 && y > 0 &&
+    //         y < grayImage.height() - 1) {
+    //         gradientResp gr = calculateGradient(grayImage, x, y);
+    //         gradient(x, y) = gr.mag;
+    //         direction(x, y) = gr.dir;
+    //     }
+    // }
 }
 
 /**

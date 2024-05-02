@@ -51,16 +51,15 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
     int width = image.width(), height = image.height();
 
     // Flatten the image data for CUDA
-    unsigned char *d_image, *d_grayImage, *d_gradient;
-    float *d_direction;
+    unsigned char *d_image, *d_grayImage;
     size_t imageSize = width * height * 3 * sizeof(unsigned char);
     size_t grayImageSize = width * height * sizeof(unsigned char);
     size_t directionSize = width * height * sizeof(float);
 
     cudaMalloc(&d_image, imageSize);
     cudaMalloc(&d_grayImage, grayImageSize);
-    cudaMalloc(&d_gradient, grayImageSize);
-    cudaMalloc(&d_direction, directionSize);
+    // cudaMalloc(&d_gradient, grayImageSize);
+    // cudaMalloc(&d_direction, directionSize);
 
     cudaMemcpy(d_image, image.data(), imageSize, cudaMemcpyHostToDevice);
 
@@ -70,18 +69,16 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
 
     colorToGrayKernel<<<gridSize, blockSize>>>(d_image, d_grayImage, width,
                                                height);
-    gradientCalculationKernel<<<gridSize, blockSize>>>(
-        d_grayImage, d_gradient, d_direction, width, height);
+    // gradientCalculationKernel<<<gridSize, blockSize>>>(
+    //     d_grayImage, d_gradient, d_direction, width, height);
 
     // Copy results back to host
-    cudaMemcpy(gradient.data(), d_gradient, grayImageSize,
+    cudaMemcpy(gradient.data(), d_grayImage, grayImageSize,
                cudaMemcpyDeviceToHost);
-    cudaMemcpy(direction.data(), d_direction, directionSize,
-               cudaMemcpyDeviceToHost);
+    // cudaMemcpy(direction.data(), d_direction, directionSize,
+    //            cudaMemcpyDeviceToHost);
 
     // Free device memory
     cudaFree(d_image);
     cudaFree(d_grayImage);
-    cudaFree(d_gradient);
-    cudaFree(d_direction);
 }
