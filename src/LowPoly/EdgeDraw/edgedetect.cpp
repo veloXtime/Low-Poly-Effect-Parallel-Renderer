@@ -22,15 +22,6 @@ CImg extractEdgeCanny(CImg &image, int method) {
         gradientInColor(image, gradient, direction);
     }
 
-    // print the gradient
-    // for (int i = 0; i < gradient.width(); i++) {
-    //     for (int j = 0; j < gradient.height(); j++) {
-    //         std::cout << "Gradient at (" << i << ", " << j
-    //                   << "): " << gradient(i, j).mag << "\t"
-    //                   << gradient(i, j).dir << std::endl;
-    //     }
-    // }
-
     // Non-maximum Suppression
     CImg edge(image.width(), image.height());
     nonMaxSuppression(edge, gradient, direction);
@@ -89,7 +80,7 @@ gradientResp calculateGradient(CImg &image, int x, int y) {
     static const int SOBEL_Y[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
 
     static const int SCHARR_X[3][3] = {{3, 0, -3}, {10, 0, -10}, {3, 0, -3}};
-    static const int SCHARR_Y[3][3] = {{3, 10, 3}, {0, 0, 0}, {-3 -10, -3}};
+    static const int SCHARR_Y[3][3] = {{3, 10, 3}, {0, 0, 0}, {-3, -10, -3}};
 
     // Calculate the gradient in the x and y directions
     int gradientX = 0;

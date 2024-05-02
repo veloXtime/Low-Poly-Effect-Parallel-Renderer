@@ -86,20 +86,6 @@ int main(int argc, char* argv[]) {
     cout << "Time taken for Edge Extraction (GPU): " << duration.count()
          << " microseconds" << endl;
 
-    // Compare each pixel of the CPU and GPU edge images and print the number
-    // and value of mismatches
-    int mismatches = 0;
-    for (int i = 0; i < width; i++) {
-        for (int j = 0; j < height; j++) {
-            if (edgeCPU(i, j) != edgeGPU(i, j)) {
-                mismatches++;
-                cout << "Mismatch at (" << i << ", " << j
-                     << "): " << (int)edgeCPU(i, j) << " vs "
-                     << (int)edgeGPU(i, j) << endl;
-            }
-        }
-    }
-
     // Delaunay triangulation
     // pickVertices(edge);
 
