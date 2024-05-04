@@ -110,13 +110,18 @@ __global__ void suppressWeakGradientsKernel(unsigned char *gradient, int width,
                                             int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
-    if (x < width && y < height) {
-        int idx = y * width +
-                  x;  // Index into the 1D array representation of the image
-        if (gradient[idx] <= SUPPRESS_THRESHOLD) {
-            gradient[idx] = 0;
+
+    for (int px = x * SMALL_BLOCK_LENGTH;
+         px < width && px < (x + 1) * SMALL_BLOCK_LENGTH; ++px)
+        for (int py = y * SMALL_BLOCK_LENGTH;
+             py < height && py < (y + 1) * SMALL_BLOCK_LENGTH; ++py) {
+            int idx =
+                py * width +
+                px;  // Index into the 1D array representation of the image
+            if (gradient[idx] <= SUPPRESS_THRESHOLD) {
+                gradient[idx] = 0;
+            }
         }
-    }
 }
 
 void suppressWeakGradientsGPU(CImg &gradient) {
@@ -133,8 +138,11 @@ void suppressWeakGradientsGPU(CImg &gradient) {
 
     // Define block and grid sizes
     dim3 blockSize(16, 16);
-    dim3 gridSize((width + blockSize.x - 1) / blockSize.x,
-                  (height + blockSize.y - 1) / blockSize.y);
+    dim3 gridSize(
+        ((width + smallBlockLength - 1) / smallBlockLength + blockSize.x - 1) /
+            blockSize.x,
+        ((height + smallBlockLength - 1) / smallBlockLength + blockSize.y - 1) /
+            blockSize.y);
 
     // Launch the kernel
     suppressWeakGradientsKernel<<<gridSize, blockSize>>>(d_gradient, width,

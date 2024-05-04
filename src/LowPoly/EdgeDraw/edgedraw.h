@@ -10,7 +10,7 @@ using CImgFloat = cimg_library::CImg<float>;
 const int ANCHOR_THRESH = 8;
 const unsigned char GRADIENT_THRESH = 30;
 
-const int smallBlockLength = 4;
+const int smallBlockLength = 16;
 
 struct gradientResp {
     unsigned char mag;  // magnitude of gradient

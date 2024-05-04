@@ -271,16 +271,16 @@ CImg edgeDraw(CImg &image, int method) {
     CImgFloat direction(image.width(), image.height());
     // Calculate gradient magnitude for each pixel
     if (method == 0) {
-        auto start = chrono::high_resolution_clock::now();
         gradientInGray(image, gradient, direction);
-        auto end = chrono::high_resolution_clock::now();
-        auto duration =
-            chrono::duration_cast<chrono::microseconds>(end - start);
-        cout << "Time CPU: " << duration.count() << " microseconds" << endl;
     } else {
         gradientInColor(image, gradient, direction);
     }
-    // suppressWeakGradients(gradient);
+
+    auto start = chrono::high_resolution_clock::now();
+    suppressWeakGradients(gradient);
+    auto end = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    cout << "Time CPU: " << duration.count() << " microseconds" << endl;
 
     // CImg edge(image.width(), image.height(), 1, 1, 0);
     // CImgBool anchor(image.width(), image.height(), 1, 1, false);
@@ -299,16 +299,16 @@ CImg edgeDrawGPU(CImg &image, int method) {
     CImgFloat direction(image.width(), image.height());
     // Calculate gradient magnitude for each pixel
     if (method == 0) {
-        auto start = chrono::high_resolution_clock::now();
         gradientInGrayGPU(image, gradient, direction);
-        auto end = chrono::high_resolution_clock::now();
-        auto duration =
-            chrono::duration_cast<chrono::microseconds>(end - start);
-        cout << "Time GPU: " << duration.count() << " microseconds" << endl;
     } else {
         gradientInColor(image, gradient, direction);
     }
-    // suppressWeakGradientsGPU(gradient);
+
+    auto start = chrono::high_resolution_clock::now();
+    suppressWeakGradientsGPU(gradient);
+    auto end = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    cout << "Time GPU: " << duration.count() << " microseconds" << endl;
 
     // CImg edge(image.width(), image.height(), 1, 1, 0);
     // CImgBool anchor(image.width(), image.height(), 1, 1, false);
