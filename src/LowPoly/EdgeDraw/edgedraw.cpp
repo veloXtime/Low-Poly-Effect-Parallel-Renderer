@@ -309,13 +309,13 @@ CImg edgeDraw(CImg &image, int method) {
     CImgBool anchor(image.width(), image.height(), 1, 1, false);
 
     // Find anchors and draw edges from anchors
-    auto start = chrono::high_resolution_clock::now();
     determineAnchors(gradient, direction, anchor);
+
+    auto start = chrono::high_resolution_clock::now();
+    drawEdgesFromAnchors(gradient, direction, anchor, edge);
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
     cout << "Time CPU: " << duration.count() << " microseconds" << endl;
-
-    // drawEdgesFromAnchors(gradient, direction, anchor, edge);
 
     // return edge;
     return edge;
@@ -337,13 +337,13 @@ CImg edgeDrawGPU(CImg &image, int method) {
     CImgBool anchor(image.width(), image.height(), 1, 1, false);
 
     // Find anchors and draw edges from anchors
-    auto start = chrono::high_resolution_clock::now();
     determineAnchorsGPU(gradient, direction, anchor);
+
+    auto start = chrono::high_resolution_clock::now();
+    drawEdgesFromAnchorsGPU(gradient, direction, anchor, edge);
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
     cout << "Time GPU: " << duration.count() << " microseconds" << endl;
-
-    // drawEdgesFromAnchors(gradient, direction, anchor, edge);
 
     // return edge;
     return edge;

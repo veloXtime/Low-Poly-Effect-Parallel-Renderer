@@ -418,11 +418,16 @@ __global__ void drawEdgesFromAnchorsKernel(unsigned char *d_gradient,
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (x < width && y < height && d_anchor[y * width + x]) {
-        bool horizontal = isHorizontalCuda(d_direction[y * width + x]);
-        drawEdgesFromAnchorKernel(x, y, d_gradient, d_direction, d_edge,
-                                  horizontal, width, height, 0);
-    }
+    for (int px = x * SMALL_BLOCK_LENGTH;
+         px < width && px < (x + 1) * SMALL_BLOCK_LENGTH; ++px)
+        for (int py = y * SMALL_BLOCK_LENGTH;
+             py < height && py < (y + 1) * SMALL_BLOCK_LENGTH; ++py) {
+            if (d_anchor[y * width + x]) {
+                bool horizontal = isHorizontalCuda(d_direction[y * width + x]);
+                drawEdgesFromAnchorKernel(x, y, d_gradient, d_direction, d_edge,
+                                          horizontal, width, height, 0);
+            }
+        }
 }
 
 void drawEdgesFromAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
