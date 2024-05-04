@@ -88,10 +88,13 @@ void determineAnchors(const CImg &gradient, const CImgFloat &direction,
  * @param edge Binary image to mark edges.
  */
 void drawHorizontalEdgeFromAnchor(int x, int y, const CImg &gradient,
-                                  const CImgFloat &direction, CImg &edge) {
+                                  const CImgFloat &direction, CImg &edge,
+                                  int pickCtr) {
     int width = gradient.width();
     int height = gradient.height();
     if (!valid(x, y, width, height) || edge(x, y)) return;
+
+    int initPickCtr = pickCtr;
 
     int curr_x = x;
     int curr_y = y;
@@ -100,6 +103,9 @@ void drawHorizontalEdgeFromAnchor(int x, int y, const CImg &gradient,
            gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
            isHorizontal(direction(curr_x, curr_y))) {
         edge(curr_x, curr_y) = 255;
+        if (pickCtr % 8 == 0) {
+            edge(curr_x, curr_y) = 254;
+        };
         unsigned char leftUp = gradient(curr_x - 1, curr_y - 1);
         unsigned char left = gradient(curr_x - 1, curr_y);
         unsigned char leftDown = gradient(curr_x - 1, curr_y + 1);
@@ -113,9 +119,12 @@ void drawHorizontalEdgeFromAnchor(int x, int y, const CImg &gradient,
         } else {
             curr_x -= 1;  // Move straight-left
         }
+        pickCtr += 1;
     }
-    drawEdgesFromAnchor(curr_x, curr_y, gradient, direction, edge, false);
+    drawEdgesFromAnchor(curr_x, curr_y, gradient, direction, edge, false,
+                        pickCtr);
 
+    pickCtr = initPickCtr;
     curr_x = x;
     curr_y = y;
     edge(x, y) = 0;
@@ -123,6 +132,9 @@ void drawHorizontalEdgeFromAnchor(int x, int y, const CImg &gradient,
            gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
            isHorizontal(direction(curr_x, curr_y))) {
         edge(curr_x, curr_y) = 255;
+        if (pickCtr % 8 == 0) {
+            edge(curr_x, curr_y) = 254;
+        };
         unsigned char rightUp = gradient(curr_x - 1, curr_y - 1);
         unsigned char right = gradient(curr_x - 1, curr_y);
         unsigned char rightDown = gradient(curr_x - 1, curr_y + 1);
@@ -136,8 +148,10 @@ void drawHorizontalEdgeFromAnchor(int x, int y, const CImg &gradient,
         } else {
             curr_x += 1;  // Move straight-right
         }
+        pickCtr += 1;
     }
-    drawEdgesFromAnchor(curr_x, curr_y, gradient, direction, edge, false);
+    drawEdgesFromAnchor(curr_x, curr_y, gradient, direction, edge, false,
+                        pickCtr);
 }
 
 /**
@@ -149,10 +163,13 @@ void drawHorizontalEdgeFromAnchor(int x, int y, const CImg &gradient,
  * @param edge Binary image to mark edges.
  */
 void drawVerticalEdgeFromAnchor(int x, int y, const CImg &gradient,
-                                const CImgFloat &direction, CImg &edge) {
+                                const CImgFloat &direction, CImg &edge,
+                                int pickCtr) {
     int width = gradient.width();
     int height = gradient.height();
     if (!valid(x, y, width, height)) return;
+
+    int initPickCtr = pickCtr;
 
     int curr_x = x;
     int curr_y = y;
@@ -163,6 +180,9 @@ void drawVerticalEdgeFromAnchor(int x, int y, const CImg &gradient,
            gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
            !isHorizontal(direction(curr_x, curr_y))) {
         edge(curr_x, curr_y) = 255;  // Mark this pixel as part of an edge
+        if (pickCtr % 8 == 0) {
+            edge(curr_x, curr_y) = 254;
+        };
         unsigned char upLeft = gradient(curr_x - 1, curr_y - 1);
         unsigned char up = gradient(curr_x, curr_y - 1);
         unsigned char upRight = gradient(curr_x + 1, curr_y - 1);
@@ -178,10 +198,13 @@ void drawVerticalEdgeFromAnchor(int x, int y, const CImg &gradient,
         } else {
             curr_y -= 1;  // Move straight up
         }
+        pickCtr++;
     }
-    drawEdgesFromAnchor(curr_x, curr_y, gradient, direction, edge, true);
+    drawEdgesFromAnchor(curr_x, curr_y, gradient, direction, edge, true,
+                        pickCtr);
 
     // Reset to anchor point
+    pickCtr = initPickCtr;
     curr_x = x;
     curr_y = y;
     edge(x, y) = 0;
@@ -191,6 +214,9 @@ void drawVerticalEdgeFromAnchor(int x, int y, const CImg &gradient,
            gradient(curr_x, curr_y) > 0 && !edge(curr_x, curr_y) &&
            !isHorizontal(direction(curr_x, curr_y))) {
         edge(curr_x, curr_y) = 255;  // Mark this pixel as part of an edge
+        if (pickCtr % 8 == 0) {
+            edge(curr_x, curr_y) = 254;
+        };
         unsigned char downLeft = gradient(curr_x - 1, curr_y + 1);
         unsigned char down = gradient(curr_x, curr_y + 1);
         unsigned char downRight = gradient(curr_x + 1, curr_y + 1);
@@ -206,8 +232,10 @@ void drawVerticalEdgeFromAnchor(int x, int y, const CImg &gradient,
         } else {
             curr_y += 1;  // Move straight down
         }
+        pickCtr += 1;
     }
-    drawEdgesFromAnchor(curr_x, curr_y, gradient, direction, edge, true);
+    drawEdgesFromAnchor(curr_x, curr_y, gradient, direction, edge, true,
+                        pickCtr);
 }
 
 /**
@@ -228,7 +256,7 @@ void drawVerticalEdgeFromAnchor(int x, int y, const CImg &gradient,
  */
 void drawEdgesFromAnchor(int x, int y, const CImg &gradient,
                          const CImgFloat &direction, CImg &edge,
-                         const bool isHorizontal) {
+                         const bool isHorizontal, int pickCtr) {
     // Check recursion base condition
     if (!valid(x, y, gradient.width(), gradient.height()) ||
         gradient(x, y) <= 0 || edge(x, y)) {
@@ -236,9 +264,9 @@ void drawEdgesFromAnchor(int x, int y, const CImg &gradient,
     }
 
     if (isHorizontal) {
-        drawHorizontalEdgeFromAnchor(x, y, gradient, direction, edge);
+        drawHorizontalEdgeFromAnchor(x, y, gradient, direction, edge, pickCtr);
     } else {
-        drawVerticalEdgeFromAnchor(x, y, gradient, direction, edge);
+        drawVerticalEdgeFromAnchor(x, y, gradient, direction, edge, pickCtr);
     }
 }
 
@@ -254,7 +282,7 @@ void drawEdgesFromAnchors(const CImg &gradient, const CImgFloat &direction,
     cimg_forXY(anchors, x, y) {
         if (anchors(x, y)) {
             drawEdgesFromAnchor(x, y, gradient, direction, edge,
-                                isHorizontal(direction(x, y)));
+                                isHorizontal(direction(x, y)), 0);
         }
     }
 }

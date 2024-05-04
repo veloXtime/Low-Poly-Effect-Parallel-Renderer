@@ -107,6 +107,7 @@ int main(int argc, char* argv[]) {
     cimg_library::CImgDisplay displayBlurred(blurredImage, "Blurred Image");
     cimg_library::CImgDisplay displayEdgeCPU(edgeCPU, "Edge Image CPU");
     cimg_library::CImgDisplay displayEdgeGPU(edgeGPU, "Edge Image GPU");
+
     // cimg_library::CImgDisplay displayVoronoi(voronoi, "Edge Image");
     // Wait for the display windows to close
     while (!display.is_closed() && !displayEdgeCPU.is_closed()) {

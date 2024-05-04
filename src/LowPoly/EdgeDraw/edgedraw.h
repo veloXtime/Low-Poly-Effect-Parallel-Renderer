@@ -7,7 +7,7 @@ using CImg = cimg_library::CImg<unsigned char>;
 using CImgBool = cimg_library::CImg<bool>;
 using CImgFloat = cimg_library::CImg<float>;
 
-const int ANCHOR_THRESH = 8;
+const int ANCHOR_THRESH = 10;
 const unsigned char GRADIENT_THRESH = 30;
 
 const int smallBlockLength = 16;
@@ -28,11 +28,11 @@ void mark(CImg &edge, int x, int y, unsigned char lowThreshold);
 
 void drawEdgesFromAnchor(int x, int y, const CImg &gradient,
                          const CImgFloat &direction, CImg &edge,
-                         const bool isHorizontal);
+                         const bool isHorizontal, int pickCtr);
 void drawHorizontalEdgeFromAnchor(int x, int y, const CImg &gradient,
-                                  const CImgFloat &direction, CImg &edge);
+                                  const CImgFloat &direction, CImg &edge, int pickCtr);
 void drawVerticalEdgeFromAnchor(int x, int y, const CImg &gradient,
-                                const CImgFloat &direction, CImg &edge);
+                                const CImgFloat &direction, CImg &edge, int pickCtr);
 CImg extractEdge(CImg &image);
 CImg extractEdgeCanny(CImg &image, int method = 0);
 CImg edgeDraw(CImg &image, int method = 0);
