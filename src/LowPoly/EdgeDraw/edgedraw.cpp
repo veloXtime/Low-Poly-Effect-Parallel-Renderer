@@ -1,6 +1,9 @@
 #include "edgedraw.h"
 
+#include <chrono>
 #include <iostream>
+
+using namespace std;
 
 /**
  * Suppress weak gradients in the image by setting pixels below a certain
@@ -53,7 +56,7 @@ void determineAnchors(const CImg &gradient, const CImgFloat &direction,
         // If the pixel is not at the edge of the image
         anchor(x, y) = false;
         if (x > 0 && x < anchor.width() - 1 && y > 0 &&
-            y < anchor.height() - 1 ) {
+            y < anchor.height() - 1) {
             float angle = direction(x, y);  // Get the continuous angle
             int magnitude = gradient(x, y);
             int mag1 = 0, mag2 = 0;
@@ -279,7 +282,12 @@ CImg edgeDraw(CImg &image, int method) {
 
     // Find anchors and draw edges from anchors
     determineAnchors(gradient, direction, anchor);
+
+    auto start = chrono::high_resolution_clock::now();
     drawEdgesFromAnchors(gradient, direction, anchor, edge);
+    auto end = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    cout << "Time GPU: " << duration.count() << " microseconds" << endl;
 
     // return edge;
     return edge;
@@ -302,7 +310,12 @@ CImg edgeDrawGPU(CImg &image, int method) {
 
     // Find anchors and draw edges from anchors
     determineAnchorsGPU(gradient, direction, anchor);
+
+    auto start = chrono::high_resolution_clock::now();
     drawEdgesFromAnchors(gradient, direction, anchor, edge);
+    auto end = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    cout << "Time GPU: " << duration.count() << " microseconds" << endl;
 
     // return edge;
     return edge;
