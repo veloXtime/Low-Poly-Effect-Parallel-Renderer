@@ -15,7 +15,9 @@
 void pickVertices(CImg &edge) {
     int ctr = 1;
     cimg_forXY(edge, x, y) {
-        if (x % 4 != 0 || y % 4 != 0) {
+        if (edge(x, y) == 254) {
+            edge(x, y) = 255;
+        } else {
             edge(x, y) = 0;
         }
     }
@@ -24,6 +26,24 @@ void pickVertices(CImg &edge) {
     edge(0, edge.height() - 1) = 255;
     edge(edge.width() - 1, 0) = 255;
     edge(edge.width() - 1, edge.height() - 1) = 255;
+
+    // Optionally, add edge boundary points
+
+    std::uniform_int_distribution<int> distribution(0, 255);
+    std::default_random_engine generator;
+    for (int x = 0; x < edge.width(); x += distribution(generator)) {
+        for (int y = 0; y < edge.height(); y+= distribution(generator)) {
+            edge(x, y ) = 255;
+        }
+    }
+    for (int x = 0; x < edge.width(); x += distribution(generator)) {
+        edge(x, 0) = 255;
+        edge(x, edge.height() - 1) = 255;
+    }
+    for (int y = 0; y < edge.height(); y += distribution(generator)) {
+        edge(0, y) = 255;
+        edge(edge.width() - 1, y) = 255;
+    }
 }
 
 int squaredDistance(int x, int y, int xx, int yy) {
@@ -45,7 +65,7 @@ CImgInt jumpFloodAlgorithm(CImg &vertices) {
     CImgInt voronoi(width, height, 1, 1, -1);
     cimg_forXY(vertices, x, y) {
         if (vertices(x, y) != 0) {
-            voronoi(x, y) = x * width + y;
+            voronoi(x, y) = y * width + x;
         }
     }
 
@@ -58,7 +78,6 @@ CImgInt jumpFloodAlgorithm(CImg &vertices) {
                 for (int dx = -1; dx <= 1; dx++) {
                     int nx = x + dx * maxStep;
                     int ny = y + dy * maxStep;
-
                     if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
                         int siteId = voronoi(nx, ny);
                         if (siteId != -1) {
@@ -83,7 +102,7 @@ CImgInt jumpFloodAlgorithm(CImg &vertices) {
 CImg colorVoronoiDiagram(CImgInt &voronoi) {
     int width = voronoi.width();
     int height = voronoi.height();
-    CImg coloredVoronoi(width, height, 1, 2, 0);
+    CImg coloredVoronoi(width, height, 1, 3, 0);
     std::uniform_int_distribution<int> distribution(0, 255);
     std::default_random_engine generator;
 
