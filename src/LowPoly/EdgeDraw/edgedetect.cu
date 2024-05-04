@@ -170,24 +170,27 @@ __global__ void determineAnchorsKernel(unsigned char *gradient,
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (x > 0 && x < width - 1 && y > 0 && y < height - 1 && x % 2 == 0 &&
-        y % 2 == 0) {
-        float angle = direction[y * width + x];
-        int magnitude = gradient[y * width + x];
-        int mag1 = 0, mag2 = 0;
+    for (int px = x * SMALL_BLOCK_LENGTH;
+         px > 0 && px < width - 1 && px < (x + 1) * SMALL_BLOCK_LENGTH; px += 2)
+        for (int py = y * SMALL_BLOCK_LENGTH;
+             py > 0 && py < height - 1 && py < (y + 1) * SMALL_BLOCK_LENGTH;
+             py += 2) {
+            float angle = direction[py * width + px];
+            int magnitude = gradient[py * width + px];
+            int mag1 = 0, mag2 = 0;
 
-        if (isHorizontalCuda(angle)) {
-            mag1 = gradient[(y - 1) * width + x];
-            mag2 = gradient[(y + 1) * width + x];
-        } else {
-            mag1 = gradient[y * width + (x - 1)];
-            mag2 = gradient[y * width + (x + 1)];
+            if (isHorizontalCuda(angle)) {
+                mag1 = gradient[(py - 1) * width + px];
+                mag2 = gradient[(py + 1) * width + px];
+            } else {
+                mag1 = gradient[py * width + (px - 1)];
+                mag2 = gradient[py * width + (px + 1)];
+            }
+
+            bool is_anchor = (magnitude - mag1 >= ANCHORS_THRESHOLD) &&
+                             (magnitude - mag2 >= ANCHORS_THRESHOLD);
+            anchor[py * width + px] = is_anchor;
         }
-
-        bool is_anchor = (magnitude - mag1 >= ANCHORS_THRESHOLD) &&
-                         (magnitude - mag2 >= ANCHORS_THRESHOLD);
-        anchor[y * width + x] = is_anchor;
-    }
 }
 
 void determineAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
@@ -215,8 +218,11 @@ void determineAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
 
     // Kernel launch parameters
     dim3 blockSize(16, 16);
-    dim3 gridSize((width + blockSize.x - 1) / blockSize.x,
-                  (height + blockSize.y - 1) / blockSize.y);
+    dim3 gridSize(
+        ((width + smallBlockLength - 1) / smallBlockLength + blockSize.x - 1) /
+            blockSize.x,
+        ((height + smallBlockLength - 1) / smallBlockLength + blockSize.y - 1) /
+            blockSize.y);
 
     // Launch kernel
     determineAnchorsKernel<<<gridSize, blockSize>>>(d_gradient, d_direction,

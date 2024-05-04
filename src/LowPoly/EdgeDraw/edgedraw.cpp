@@ -275,22 +275,22 @@ CImg edgeDraw(CImg &image, int method) {
     } else {
         gradientInColor(image, gradient, direction);
     }
-
-    auto start = chrono::high_resolution_clock::now();
     suppressWeakGradients(gradient);
+
+    CImg edge(image.width(), image.height(), 1, 1, 0);
+    CImgBool anchor(image.width(), image.height(), 1, 1, false);
+
+    // Find anchors and draw edges from anchors
+    auto start = chrono::high_resolution_clock::now();
+    determineAnchors(gradient, direction, anchor);
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
     cout << "Time CPU: " << duration.count() << " microseconds" << endl;
 
-    // CImg edge(image.width(), image.height(), 1, 1, 0);
-    // CImgBool anchor(image.width(), image.height(), 1, 1, false);
-
-    // // Find anchors and draw edges from anchors
-    // determineAnchors(gradient, direction, anchor);
     // drawEdgesFromAnchors(gradient, direction, anchor, edge);
 
     // return edge;
-    return gradient;
+    return edge;
 }
 
 CImg edgeDrawGPU(CImg &image, int method) {
@@ -303,20 +303,20 @@ CImg edgeDrawGPU(CImg &image, int method) {
     } else {
         gradientInColor(image, gradient, direction);
     }
-
-    auto start = chrono::high_resolution_clock::now();
     suppressWeakGradientsGPU(gradient);
+
+    CImg edge(image.width(), image.height(), 1, 1, 0);
+    CImgBool anchor(image.width(), image.height(), 1, 1, false);
+
+    // Find anchors and draw edges from anchors
+    auto start = chrono::high_resolution_clock::now();
+    determineAnchorsGPU(gradient, direction, anchor);
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
     cout << "Time GPU: " << duration.count() << " microseconds" << endl;
 
-    // CImg edge(image.width(), image.height(), 1, 1, 0);
-    // CImgBool anchor(image.width(), image.height(), 1, 1, false);
-
-    // // Find anchors and draw edges from anchors
-    // determineAnchorsGPU(gradient, direction, anchor);
     // drawEdgesFromAnchors(gradient, direction, anchor, edge);
 
     // return edge;
-    return gradient;
+    return edge;
 }
