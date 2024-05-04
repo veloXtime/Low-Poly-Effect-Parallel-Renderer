@@ -19,11 +19,11 @@ __global__ void colorToGrayKernel(unsigned char *image,
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     int pixels = width * height;
 
-    for (int xx = x * SMALL_BLOCK_LENGTH;
-         xx < width && xx < (x + 1) * SMALL_BLOCK_LENGTH; ++xx)
-        for (int yy = y * SMALL_BLOCK_LENGTH;
-             yy < height && yy < (y + 1) * SMALL_BLOCK_LENGTH; ++yy) {
-            int idx = yy * width + xx;
+    for (int px = x * SMALL_BLOCK_LENGTH;
+         px < width && px < (x + 1) * SMALL_BLOCK_LENGTH; ++px)
+        for (int py = y * SMALL_BLOCK_LENGTH;
+             py < height && py < (y + 1) * SMALL_BLOCK_LENGTH; ++py) {
+            int idx = py * width + px;
             unsigned char r = image[idx];
             unsigned char g = image[idx + pixels];
             unsigned char b = image[idx + 2 * pixels];
@@ -39,22 +39,27 @@ __global__ void gradientCalculationKernel(unsigned char *grayImage,
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (x > 0 && x < width - 1 && y > 0 && y < height - 1) {
-        int gradientX = 0, gradientY = 0;
+    for (int px = x * SMALL_BLOCK_LENGTH;
+         px > 0 && px < width - 1 && px < (x + 1) * SMALL_BLOCK_LENGTH; ++px)
+        for (int py = y * SMALL_BLOCK_LENGTH;
+             py > 0 && py < height - 1 && py < (y + 1) * SMALL_BLOCK_LENGTH;
+             ++py) {
+            int gradientX = 0, gradientY = 0;
 
-        // Apply the Sobel filter
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                int pixel = grayImage[(y + j) * width + (x + i)];
-                gradientX += SOBEL_X[i + 1][j + 1] * pixel;
-                gradientY += SOBEL_Y[i + 1][j + 1] * pixel;
+            // Apply the Sobel filter
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    int pixel = grayImage[(py + j) * width + (px + i)];
+                    gradientX += SOBEL_X[i + 1][j + 1] * pixel;
+                    gradientY += SOBEL_Y[i + 1][j + 1] * pixel;
+                }
             }
-        }
 
-        int idx = y * width + x;
-        gradient[idx] = sqrtf(gradientX * gradientX + gradientY * gradientY);
-        direction[idx] = atan2f(gradientY, gradientX) * 180 / M_PI;
-    }
+            int idx = py * width + px;
+            gradient[idx] =
+                sqrtf(gradientX * gradientX + gradientY * gradientY);
+            direction[idx] = atan2f(gradientY, gradientX) * 180 / M_PI;
+        }
 }
 
 void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
@@ -69,12 +74,12 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
 
     cudaMalloc(&d_image, imageSize);
     cudaMalloc(&d_grayImage, grayImageSize);
-    // cudaMalloc(&d_gradient, grayImageSize);
-    // cudaMalloc(&d_direction, directionSize);
+    cudaMalloc(&d_gradient, grayImageSize);
+    cudaMalloc(&d_direction, directionSize);
 
     cudaMemcpy(d_image, image.data(), imageSize, cudaMemcpyHostToDevice);
-    // cudaMemset(d_gradient, 0, grayImageSize);
-    // cudaMemset(d_direction, 0, directionSize);
+    cudaMemset(d_gradient, 0, grayImageSize);
+    cudaMemset(d_direction, 0, directionSize);
 
     dim3 blockSize(16, 16);
     dim3 gridSize(
@@ -85,20 +90,20 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
 
     colorToGrayKernel<<<gridSize, blockSize>>>(d_image, d_grayImage, width,
                                                height);
-    // gradientCalculationKernel<<<gridSize, blockSize>>>(
-    //     d_grayImage, d_gradient, d_direction, width, height);
+    gradientCalculationKernel<<<gridSize, blockSize>>>(
+        d_grayImage, d_gradient, d_direction, width, height);
 
     // Copy results back to host
-    cudaMemcpy(gradient.data(), d_grayImage, grayImageSize,
+    cudaMemcpy(gradient.data(), d_gradient, grayImageSize,
                cudaMemcpyDeviceToHost);
-    // cudaMemcpy(direction.data(), d_direction, directionSize,
-    //            cudaMemcpyDeviceToHost);
+    cudaMemcpy(direction.data(), d_direction, directionSize,
+               cudaMemcpyDeviceToHost);
 
     // Free device memory
     cudaFree(d_image);
     cudaFree(d_grayImage);
-    // cudaFree(d_gradient);
-    // cudaFree(d_direction);
+    cudaFree(d_gradient);
+    cudaFree(d_direction);
 }
 
 __global__ void suppressWeakGradientsKernel(unsigned char *gradient, int width,
