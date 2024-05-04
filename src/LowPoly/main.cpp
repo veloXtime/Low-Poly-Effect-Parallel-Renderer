@@ -77,12 +77,15 @@ int main(int argc, char* argv[]) {
         getline(cin, imagePath);  // Read the entire line, including spaces
     }
 
+
     // Load the image
     CImg image(imagePath.c_str());
     int width = image.width();
     int height = image.height();
     unsigned char* inputImage = image.data();
     int channels = image.spectrum();
+
+    cout << image.width() << " " << image.height() << endl;
 
     // Step 1: perform the Gaussian blur
     unsigned char* gbImage = applyGaussianBlur(image, width, height, channels);
@@ -93,23 +96,26 @@ int main(int argc, char* argv[]) {
     CImg edgeCPU = applyEdgeDetectionCPU(blurredImage);
 
     // Apply edge extraction using GPU
-    CImg edgeGPU = applyEdgeDetectionGPU(blurredImage);
+    // CImg edgeGPU = applyEdgeDetectionGPU(blurredImage);
 
     // Delaunay triangulation
-    // pickVertices(edge);
+    pickVertices(edgeCPU);
+    CImgInt voronoi = jumpFloodAlgorithm(edgeCPU);
+    delaunayTriangulation(voronoi, image);
 
     // Display the original and blurred images
     cimg_library::CImgDisplay display(image, "Original Image");
     cimg_library::CImgDisplay displayBlurred(blurredImage, "Blurred Image");
     cimg_library::CImgDisplay displayEdgeCPU(edgeCPU, "Edge Image CPU");
-    cimg_library::CImgDisplay displayEdgeGPU(edgeGPU, "Edge Image GPU");
+    // cimg_library::CImgDisplay displayEdgeGPU(edgeGPU, "Edge Image GPU");
+    cimg_library::CImgDisplay displayVoronoi(voronoi, "Edge Image");
     // Wait for the display windows to close
-    while (!display.is_closed() && !displayBlurred.is_closed() &&
-           !displayEdgeCPU.is_closed() && !displayEdgeGPU.is_closed()) {
+    while (!display.is_closed() && 
+           !displayEdgeCPU.is_closed() && !displayVoronoi.is_closed() ) {
         display.wait();
-        displayBlurred.wait();
         displayEdgeCPU.wait();
-        displayEdgeGPU.wait();
+        displayVoronoi.wait();
+        // displayEdgeGPU.wait();
     }
 
     // Free memory

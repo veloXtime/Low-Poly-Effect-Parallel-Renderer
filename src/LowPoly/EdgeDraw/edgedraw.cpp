@@ -53,7 +53,7 @@ void determineAnchors(const CImg &gradient, const CImgFloat &direction,
         // If the pixel is not at the edge of the image
         anchor(x, y) = false;
         if (x > 0 && x < anchor.width() - 1 && y > 0 &&
-            y < anchor.height() - 1 && x % 2 == 0 && y % 2 == 0) {
+            y < anchor.height() - 1 ) {
             float angle = direction(x, y);  // Get the continuous angle
             int magnitude = gradient(x, y);
             int mag1 = 0, mag2 = 0;
