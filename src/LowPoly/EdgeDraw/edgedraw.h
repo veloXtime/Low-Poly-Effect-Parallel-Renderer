@@ -10,7 +10,7 @@ using CImgFloat = cimg_library::CImg<float>;
 const int ANCHOR_THRESH = 10;
 const unsigned char GRADIENT_THRESH = 30;
 
-const int smallBlockLength = 16;
+const int smallBlockLength = 1;
 
 struct gradientResp {
     unsigned char mag;  // magnitude of gradient
@@ -30,9 +30,11 @@ void drawEdgesFromAnchor(int x, int y, const CImg &gradient,
                          const CImgFloat &direction, CImg &edge,
                          const bool isHorizontal, int pickCtr);
 void drawHorizontalEdgeFromAnchor(int x, int y, const CImg &gradient,
-                                  const CImgFloat &direction, CImg &edge, int pickCtr);
+                                  const CImgFloat &direction, CImg &edge,
+                                  int pickCtr);
 void drawVerticalEdgeFromAnchor(int x, int y, const CImg &gradient,
-                                const CImgFloat &direction, CImg &edge, int pickCtr);
+                                const CImgFloat &direction, CImg &edge,
+                                int pickCtr);
 CImg extractEdge(CImg &image);
 CImg extractEdgeCanny(CImg &image, int method = 0);
 CImg edgeDraw(CImg &image, int method = 0);

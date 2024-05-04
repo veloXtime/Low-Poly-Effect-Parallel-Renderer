@@ -8,9 +8,12 @@ __constant__ unsigned char SUPPRESS_THRESHOLD = GRADIENT_THRESH;
 __constant__ int ANCHORS_THRESHOLD = ANCHOR_THRESH;
 __constant__ int SMALL_BLOCK_LENGTH = smallBlockLength;
 
-__device__ void drawEdgesFromAnchorKernel(
-    int x, int y, unsigned char *d_gradient, float *d_direction,
-    unsigned char *d_edge, const bool horizontal, int width, int height);
+__device__ void drawEdgesFromAnchorKernel(int x, int y,
+                                          unsigned char *d_gradient,
+                                          float *d_direction,
+                                          unsigned char *d_edge,
+                                          const bool horizontal, int width,
+                                          int height, int pickCtr);
 
 __global__ void colorToGrayKernel(unsigned char *image,
                                   unsigned char *grayImage, int width,
@@ -242,12 +245,12 @@ __device__ bool validCuda(int x, int y, int width, int height) {
     return x > 0 && y > 0 && x < width - 1 && y < height - 1;
 }
 
-__device__ void drawHorizontalEdgeFromAnchorKernel(int x, int y,
-                                                   unsigned char *d_gradient,
-                                                   float *d_direction,
-                                                   unsigned char *d_edge,
-                                                   int width, int height) {
+__device__ void drawHorizontalEdgeFromAnchorKernel(
+    int x, int y, unsigned char *d_gradient, float *d_direction,
+    unsigned char *d_edge, int width, int height, int pickCtr) {
     if (!validCuda(x, y, width, height) || d_edge[y * width + x]) return;
+
+    int initPickCtr = pickCtr;
 
     int curr_x = x;
     int curr_y = y;
@@ -257,6 +260,9 @@ __device__ void drawHorizontalEdgeFromAnchorKernel(int x, int y,
            !d_edge[curr_y * width + curr_x] &&
            isHorizontalCuda(d_direction[curr_y * width + curr_x])) {
         d_edge[curr_y * width + curr_x] = 255;
+        if (pickCtr % 8 == 0) {
+            d_edge[curr_y * width + curr_x] = 254;
+        };
         unsigned char leftUp = d_gradient[(curr_y - 1) * width + curr_x - 1];
         unsigned char left = d_gradient[curr_y * width + curr_x - 1];
         unsigned char leftDown = d_gradient[(curr_y + 1) * width + curr_x - 1];
@@ -270,10 +276,12 @@ __device__ void drawHorizontalEdgeFromAnchorKernel(int x, int y,
         } else {
             curr_x -= 1;  // Move straight-left
         }
+        pickCtr += 1;
     }
     drawEdgesFromAnchorKernel(curr_x, curr_y, d_gradient, d_direction, d_edge,
-                              false, width, height);
+                              false, width, height, pickCtr);
 
+    pickCtr = initPickCtr;
     curr_x = x;
     curr_y = y;
     d_edge[y * width + x] = 0;
@@ -282,6 +290,9 @@ __device__ void drawHorizontalEdgeFromAnchorKernel(int x, int y,
            !d_edge[curr_y * width + curr_x] &&
            isHorizontalCuda(d_direction[curr_y * width + curr_x])) {
         d_edge[curr_y * width + curr_x] = 255;
+        if (pickCtr % 8 == 0) {
+            d_edge[curr_y * width + curr_x] = 254;
+        };
         unsigned char rightUp = d_gradient[(curr_y - 1) * width + curr_x - 1];
         unsigned char right = d_gradient[curr_y * width + curr_x - 1];
         unsigned char rightDown = d_gradient[(curr_y + 1) * width + curr_x - 1];
@@ -295,17 +306,18 @@ __device__ void drawHorizontalEdgeFromAnchorKernel(int x, int y,
         } else {
             curr_x += 1;  // Move straight-right
         }
+        pickCtr += 1;
     }
     drawEdgesFromAnchorKernel(curr_x, curr_y, d_gradient, d_direction, d_edge,
-                              false, width, height);
+                              false, width, height, pickCtr);
 }
 
-__device__ void drawVerticalEdgeFromAnchorKernel(int x, int y,
-                                                 unsigned char *d_gradient,
-                                                 float *d_direction,
-                                                 unsigned char *d_edge,
-                                                 int width, int height) {
+__device__ void drawVerticalEdgeFromAnchorKernel(
+    int x, int y, unsigned char *d_gradient, float *d_direction,
+    unsigned char *d_edge, int width, int height, int pickCtr) {
     if (!validCuda(x, y, width, height)) return;
+
+    int initPickCtr = pickCtr;
 
     int curr_x = x;
     int curr_y = y;
@@ -318,6 +330,9 @@ __device__ void drawVerticalEdgeFromAnchorKernel(int x, int y,
            !isHorizontalCuda(d_direction[curr_y * width + curr_x])) {
         d_edge[curr_y * width + curr_x] =
             255;  // Mark this pixel as part of an edge
+        if (pickCtr % 8 == 0) {
+            d_edge[curr_y * width + curr_x] = 254;
+        };
         unsigned char upLeft = d_gradient[(curr_y - 1) * width + curr_x - 1];
         unsigned char up = d_gradient[(curr_y - 1) * width + curr_x];
         unsigned char upRight = d_gradient[(curr_y - 1) * width + curr_x + 1];
@@ -333,11 +348,13 @@ __device__ void drawVerticalEdgeFromAnchorKernel(int x, int y,
         } else {
             curr_y -= 1;  // Move straight up
         }
+        pickCtr += 1;
     }
     drawEdgesFromAnchorKernel(curr_x, curr_y, d_gradient, d_direction, d_edge,
-                              true, width, height);
+                              true, width, height, pickCtr);
 
     // Reset to anchor point
+    pickCtr = initPickCtr;
     curr_x = x;
     curr_y = y;
     d_edge[y * width + x] = 0;
@@ -349,6 +366,9 @@ __device__ void drawVerticalEdgeFromAnchorKernel(int x, int y,
            !isHorizontalCuda(d_direction[curr_y * width + curr_x])) {
         d_edge[curr_y * width + curr_x] =
             255;  // Mark this pixel as part of an edge
+        if (pickCtr % 8 == 0) {
+            d_edge[curr_y * width + curr_x] = 254;
+        };
         unsigned char downLeft = d_gradient[(curr_y + 1) * width + curr_x - 1];
         unsigned char down = d_gradient[(curr_y + 1) * width + curr_x];
         unsigned char downRight = d_gradient[(curr_y + 1) * width + curr_x + 1];
@@ -364,14 +384,18 @@ __device__ void drawVerticalEdgeFromAnchorKernel(int x, int y,
         } else {
             curr_y += 1;  // Move straight down
         }
+        pickCtr += 1;
     }
     drawEdgesFromAnchorKernel(curr_x, curr_y, d_gradient, d_direction, d_edge,
-                              true, width, height);
+                              true, width, height, pickCtr);
 }
 
-__device__ void drawEdgesFromAnchorKernel(
-    int x, int y, unsigned char *d_gradient, float *d_direction,
-    unsigned char *d_edge, const bool horizontal, int width, int height) {
+__device__ void drawEdgesFromAnchorKernel(int x, int y,
+                                          unsigned char *d_gradient,
+                                          float *d_direction,
+                                          unsigned char *d_edge,
+                                          const bool horizontal, int width,
+                                          int height, int pickCtr) {
     // Check recursion base condition
     if (!validCuda(x, y, width, height) || d_gradient[y * width + x] <= 0 ||
         d_edge[y * width + x]) {
@@ -380,10 +404,10 @@ __device__ void drawEdgesFromAnchorKernel(
 
     if (horizontal) {
         drawHorizontalEdgeFromAnchorKernel(x, y, d_gradient, d_direction,
-                                           d_edge, width, height);
+                                           d_edge, width, height, pickCtr);
     } else {
         drawVerticalEdgeFromAnchorKernel(x, y, d_gradient, d_direction, d_edge,
-                                         width, height);
+                                         width, height, pickCtr);
     }
 }
 
@@ -397,7 +421,7 @@ __global__ void drawEdgesFromAnchorsKernel(unsigned char *d_gradient,
     if (x < width && y < height && d_anchor[y * width + x]) {
         bool horizontal = isHorizontalCuda(d_direction[y * width + x]);
         drawEdgesFromAnchorKernel(x, y, d_gradient, d_direction, d_edge,
-                                  horizontal, width, height);
+                                  horizontal, width, height, 0);
     }
 }
 
