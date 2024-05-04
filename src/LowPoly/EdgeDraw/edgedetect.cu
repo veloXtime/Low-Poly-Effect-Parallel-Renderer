@@ -7,6 +7,10 @@ __constant__ int SOBEL_Y[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
 __constant__ unsigned char SUPPRESS_THRESHOLD = GRADIENT_THRESH;
 __constant__ int ANCHORS_THRESHOLD = ANCHOR_THRESH;
 
+__device__ void drawEdgesFromAnchorKernel(
+    int x, int y, unsigned char *d_gradient, float *d_direction,
+    unsigned char *d_edge, const bool horizontal, int width, int height);
+
 __global__ void colorToGrayKernel(unsigned char *image,
                                   unsigned char *grayImage, int width,
                                   int height) {
@@ -206,4 +210,208 @@ void determineAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
     cudaFree(d_gradient);
     cudaFree(d_direction);
     cudaFree(d_anchor);
+}
+
+__device__ bool validCuda(int x, int y, int width, int height) {
+    return x > 0 && y > 0 && x < width - 1 && y < height - 1;
+}
+
+__device__ void drawHorizontalEdgeFromAnchorKernel(int x, int y,
+                                                   unsigned char *d_gradient,
+                                                   float *d_direction,
+                                                   unsigned char *d_edge,
+                                                   int width, int height) {
+    if (!validCuda(x, y, width, height) || d_edge[y * width + x]) return;
+
+    int curr_x = x;
+    int curr_y = y;
+    d_edge[y * width + x] = 0;
+    while (validCuda(curr_x, curr_y, width, height) &&
+           d_gradient[curr_y * width + curr_x] > 0 &&
+           !d_edge[curr_y * width + curr_x] &&
+           isHorizontalCuda(d_direction[curr_y * width + curr_x])) {
+        d_edge[curr_y * width + curr_x] = 255;
+        unsigned char leftUp = d_gradient[(curr_y - 1) * width + curr_x - 1];
+        unsigned char left = d_gradient[curr_y * width + curr_x - 1];
+        unsigned char leftDown = d_gradient[(curr_y + 1) * width + curr_x - 1];
+        // Move to the pixel with the highest gradient value
+        if (leftUp > left && leftUp > leftDown) {
+            curr_x -= 1;
+            curr_y -= 1;  // Move up-left
+        } else if (leftDown > left && leftDown > leftUp) {
+            curr_x -= 1;
+            curr_y += 1;  // Move down-left
+        } else {
+            curr_x -= 1;  // Move straight-left
+        }
+    }
+    drawEdgesFromAnchorKernel(curr_x, curr_y, d_gradient, d_direction, d_edge,
+                              false, width, height);
+
+    curr_x = x;
+    curr_y = y;
+    d_edge[y * width + x] = 0;
+    while (validCuda(curr_x, curr_y, width, height) &&
+           d_gradient[curr_y * width + curr_x] > 0 &&
+           !d_edge[curr_y * width + curr_x] &&
+           isHorizontalCuda(d_direction[curr_y * width + curr_x])) {
+        d_edge[curr_y * width + curr_x] = 255;
+        unsigned char rightUp = d_gradient[(curr_y - 1) * width + curr_x - 1];
+        unsigned char right = d_gradient[curr_y * width + curr_x - 1];
+        unsigned char rightDown = d_gradient[(curr_y + 1) * width + curr_x - 1];
+        // Move to the pixel with the highest gradient value
+        if (rightUp > right && rightUp > rightDown) {
+            curr_x += 1;
+            curr_y -= 1;  // Move up-right
+        } else if (rightDown > right && rightDown > rightUp) {
+            curr_x += 1;
+            curr_y += 1;  // Move down-right
+        } else {
+            curr_x += 1;  // Move straight-right
+        }
+    }
+    drawEdgesFromAnchorKernel(curr_x, curr_y, d_gradient, d_direction, d_edge,
+                              false, width, height);
+}
+
+__device__ void drawVerticalEdgeFromAnchorKernel(int x, int y,
+                                                 unsigned char *d_gradient,
+                                                 float *d_direction,
+                                                 unsigned char *d_edge,
+                                                 int width, int height) {
+    if (!validCuda(x, y, width, height)) return;
+
+    int curr_x = x;
+    int curr_y = y;
+    d_edge[y * width + x] = 0;  // Assuming white edges on a black background
+
+    // Trace upwards from the anchor point
+    while (validCuda(curr_x, curr_y, width, height) &&
+           d_gradient[curr_y * width + curr_x] > 0 &&
+           !d_edge[curr_y * width + curr_x] &&
+           !isHorizontalCuda(d_direction[curr_y * width + curr_x])) {
+        d_edge[curr_y * width + curr_x] =
+            255;  // Mark this pixel as part of an edge
+        unsigned char upLeft = d_gradient[(curr_y - 1) * width + curr_x - 1];
+        unsigned char up = d_gradient[(curr_y - 1) * width + curr_x];
+        unsigned char upRight = d_gradient[(curr_y - 1) * width + curr_x + 1];
+
+        // Move to the pixel with the highest gradient value above the current
+        // pixel
+        if (upLeft > up && upLeft > upRight) {
+            curr_x -= 1;
+            curr_y -= 1;  // Move top-left
+        } else if (upRight > up && upRight > upLeft) {
+            curr_x += 1;
+            curr_y -= 1;  // Move top-right
+        } else {
+            curr_y -= 1;  // Move straight up
+        }
+    }
+    drawEdgesFromAnchorKernel(curr_x, curr_y, d_gradient, d_direction, d_edge,
+                              true, width, height);
+
+    // Reset to anchor point
+    curr_x = x;
+    curr_y = y;
+    d_edge[y * width + x] = 0;
+
+    // Trace downwards from the anchor point
+    while (validCuda(curr_x, curr_y, width, height) &&
+           d_gradient[curr_y * width + curr_x] > 0 &&
+           !d_edge[curr_y * width + curr_x] &&
+           !isHorizontalCuda(d_direction[curr_y * width + curr_x])) {
+        d_edge[curr_y * width + curr_x] =
+            255;  // Mark this pixel as part of an edge
+        unsigned char downLeft = d_gradient[(curr_y + 1) * width + curr_x - 1];
+        unsigned char down = d_gradient[(curr_y + 1) * width + curr_x];
+        unsigned char downRight = d_gradient[(curr_y + 1) * width + curr_x + 1];
+
+        // Move to the pixel with the highest gradient value below the current
+        // pixel
+        if (downLeft > down && downLeft > downRight) {
+            curr_x -= 1;
+            curr_y += 1;  // Move bottom-left
+        } else if (downRight > down && downRight > downLeft) {
+            curr_x += 1;
+            curr_y += 1;  // Move bottom-right
+        } else {
+            curr_y += 1;  // Move straight down
+        }
+    }
+    drawEdgesFromAnchorKernel(curr_x, curr_y, d_gradient, d_direction, d_edge,
+                              true, width, height);
+}
+
+__device__ void drawEdgesFromAnchorKernel(
+    int x, int y, unsigned char *d_gradient, float *d_direction,
+    unsigned char *d_edge, const bool horizontal, int width, int height) {
+    // Check recursion base condition
+    if (!validCuda(x, y, width, height) || d_gradient[y * width + x] <= 0 ||
+        d_edge[y * width + x]) {
+        return;
+    }
+
+    if (horizontal) {
+        drawHorizontalEdgeFromAnchorKernel(x, y, d_gradient, d_direction,
+                                           d_edge, width, height);
+    } else {
+        drawVerticalEdgeFromAnchorKernel(x, y, d_gradient, d_direction, d_edge,
+                                         width, height);
+    }
+}
+
+__global__ void drawEdgesFromAnchorsKernel(unsigned char *d_gradient,
+                                           float *d_direction, bool *d_anchor,
+                                           unsigned char *d_edge, int width,
+                                           int height) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (x < width && y < height && d_anchor[y * width + x]) {
+        bool horizontal = isHorizontalCuda(d_direction[y * width + x]);
+        drawEdgesFromAnchorKernel(x, y, d_gradient, d_direction, d_edge,
+                                  horizontal, width, height);
+    }
+}
+
+void drawEdgesFromAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
+                             const CImgBool &anchors, CImg &edge) {
+    int width = gradient.width();
+    int height = gradient.height();
+    size_t numPixels = width * height;
+
+    // Device memory pointers
+    unsigned char *d_gradient;
+    float *d_direction;
+    bool *d_anchor;
+    unsigned char *d_edge;
+
+    // Allocate device memory
+    cudaMalloc(&d_gradient, numPixels * sizeof(unsigned char));
+    cudaMalloc(&d_direction, numPixels * sizeof(float));
+    cudaMalloc(&d_anchor, numPixels * sizeof(bool));
+    cudaMalloc(&d_edge, numPixels * sizeof(unsigned char));
+
+    // Copy data to device
+    cudaMemcpy(d_gradient, gradient.data(), numPixels * sizeof(unsigned char),
+               cudaMemcpyHostToDevice);
+    cudaMemcpy(d_direction, direction.data(), numPixels * sizeof(float),
+               cudaMemcpyHostToDevice);
+    cudaMemcpy(d_anchor, anchors.data(), numPixels * sizeof(bool),
+               cudaMemcpyHostToDevice);
+
+    // Kernel launch parameters
+    // TODO: extract true anchors for cuda threads
+    dim3 blockSize(16, 16);
+    dim3 gridSize((width + blockSize.x - 1) / blockSize.x,
+                  (height + blockSize.y - 1) / blockSize.y);
+
+    // Launch kernel
+    drawEdgesFromAnchorsKernel<<<gridSize, blockSize>>>(
+        d_gradient, d_direction, d_anchor, d_edge, width, height);
+
+    // Copy results back to host
+    cudaMemcpy(edge.data(), d_edge, numPixels * sizeof(unsigned char),
+               cudaMemcpyDeviceToHost);
 }

@@ -40,6 +40,8 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction);
 void suppressWeakGradientsGPU(CImg &gradient);
 void determineAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
                          CImgBool &anchor);
+void drawEdgesFromAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
+                             const CImgBool &anchors, CImg &edge);
 CImg edgeDrawGPU(CImg &image, int method = 0);
 
 // Functions for Delaunay triangulation
