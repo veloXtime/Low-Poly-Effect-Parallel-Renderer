@@ -271,26 +271,26 @@ CImg edgeDraw(CImg &image, int method) {
     CImgFloat direction(image.width(), image.height());
     // Calculate gradient magnitude for each pixel
     if (method == 0) {
+        auto start = chrono::high_resolution_clock::now();
         gradientInGray(image, gradient, direction);
+        auto end = chrono::high_resolution_clock::now();
+        auto duration =
+            chrono::duration_cast<chrono::microseconds>(end - start);
+        cout << "Time CPU: " << duration.count() << " microseconds" << endl;
     } else {
         gradientInColor(image, gradient, direction);
     }
-    suppressWeakGradients(gradient);
+    // suppressWeakGradients(gradient);
 
-    CImg edge(image.width(), image.height(), 1, 1, 0);
-    CImgBool anchor(image.width(), image.height(), 1, 1, false);
+    // CImg edge(image.width(), image.height(), 1, 1, 0);
+    // CImgBool anchor(image.width(), image.height(), 1, 1, false);
 
-    // Find anchors and draw edges from anchors
-    determineAnchors(gradient, direction, anchor);
-
-    auto start = chrono::high_resolution_clock::now();
-    drawEdgesFromAnchors(gradient, direction, anchor, edge);
-    auto end = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-    cout << "Time GPU: " << duration.count() << " microseconds" << endl;
+    // // Find anchors and draw edges from anchors
+    // determineAnchors(gradient, direction, anchor);
+    // drawEdgesFromAnchors(gradient, direction, anchor, edge);
 
     // return edge;
-    return edge;
+    return gradient;
 }
 
 CImg edgeDrawGPU(CImg &image, int method) {
@@ -299,24 +299,24 @@ CImg edgeDrawGPU(CImg &image, int method) {
     CImgFloat direction(image.width(), image.height());
     // Calculate gradient magnitude for each pixel
     if (method == 0) {
+        auto start = chrono::high_resolution_clock::now();
         gradientInGrayGPU(image, gradient, direction);
+        auto end = chrono::high_resolution_clock::now();
+        auto duration =
+            chrono::duration_cast<chrono::microseconds>(end - start);
+        cout << "Time GPU: " << duration.count() << " microseconds" << endl;
     } else {
         gradientInColor(image, gradient, direction);
     }
-    suppressWeakGradientsGPU(gradient);
+    // suppressWeakGradientsGPU(gradient);
 
-    CImg edge(image.width(), image.height(), 1, 1, 0);
-    CImgBool anchor(image.width(), image.height(), 1, 1, false);
+    // CImg edge(image.width(), image.height(), 1, 1, 0);
+    // CImgBool anchor(image.width(), image.height(), 1, 1, false);
 
-    // Find anchors and draw edges from anchors
-    determineAnchorsGPU(gradient, direction, anchor);
-
-    auto start = chrono::high_resolution_clock::now();
-    drawEdgesFromAnchors(gradient, direction, anchor, edge);
-    auto end = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-    cout << "Time GPU: " << duration.count() << " microseconds" << endl;
+    // // Find anchors and draw edges from anchors
+    // determineAnchorsGPU(gradient, direction, anchor);
+    // drawEdgesFromAnchors(gradient, direction, anchor, edge);
 
     // return edge;
-    return edge;
+    return gradient;
 }

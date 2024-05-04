@@ -6,6 +6,7 @@ __constant__ int SOBEL_X[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
 __constant__ int SOBEL_Y[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
 __constant__ unsigned char SUPPRESS_THRESHOLD = GRADIENT_THRESH;
 __constant__ int ANCHORS_THRESHOLD = ANCHOR_THRESH;
+__constant__ int SMALL_BLOCK_LENGTH = smallBlockLength;
 
 __device__ void drawEdgesFromAnchorKernel(
     int x, int y, unsigned char *d_gradient, float *d_direction,
@@ -18,14 +19,17 @@ __global__ void colorToGrayKernel(unsigned char *image,
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     int pixels = width * height;
 
-    if (x < width && y < height) {
-        int idx = y * width + x;
-        unsigned char r = image[idx];
-        unsigned char g = image[idx + pixels];
-        unsigned char b = image[idx + 2 * pixels];
-        unsigned char grayValue = 0.299f * r + 0.587f * g + 0.114f * b;
-        grayImage[idx] = grayValue;
-    }
+    for (int xx = x * SMALL_BLOCK_LENGTH;
+         xx < width && xx < (x + 1) * SMALL_BLOCK_LENGTH; ++xx)
+        for (int yy = y * SMALL_BLOCK_LENGTH;
+             yy < height && yy < (y + 1) * SMALL_BLOCK_LENGTH; ++yy) {
+            int idx = yy * width + xx;
+            unsigned char r = image[idx];
+            unsigned char g = image[idx + pixels];
+            unsigned char b = image[idx + 2 * pixels];
+            unsigned char grayValue = 0.299f * r + 0.587f * g + 0.114f * b;
+            grayImage[idx] = grayValue;
+        }
 }
 
 __global__ void gradientCalculationKernel(unsigned char *grayImage,
@@ -65,33 +69,36 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
 
     cudaMalloc(&d_image, imageSize);
     cudaMalloc(&d_grayImage, grayImageSize);
-    cudaMalloc(&d_gradient, grayImageSize);
-    cudaMalloc(&d_direction, directionSize);
+    // cudaMalloc(&d_gradient, grayImageSize);
+    // cudaMalloc(&d_direction, directionSize);
 
     cudaMemcpy(d_image, image.data(), imageSize, cudaMemcpyHostToDevice);
-    cudaMemset(d_gradient, 0, grayImageSize);
-    cudaMemset(d_direction, 0, directionSize);
+    // cudaMemset(d_gradient, 0, grayImageSize);
+    // cudaMemset(d_direction, 0, directionSize);
 
     dim3 blockSize(16, 16);
-    dim3 gridSize((width + blockSize.x - 1) / blockSize.x,
-                  (height + blockSize.y - 1) / blockSize.y);
+    dim3 gridSize(
+        ((width + smallBlockLength - 1) / smallBlockLength + blockSize.x - 1) /
+            blockSize.x,
+        ((height + smallBlockLength - 1) / smallBlockLength + blockSize.y - 1) /
+            blockSize.y);
 
     colorToGrayKernel<<<gridSize, blockSize>>>(d_image, d_grayImage, width,
                                                height);
-    gradientCalculationKernel<<<gridSize, blockSize>>>(
-        d_grayImage, d_gradient, d_direction, width, height);
+    // gradientCalculationKernel<<<gridSize, blockSize>>>(
+    //     d_grayImage, d_gradient, d_direction, width, height);
 
     // Copy results back to host
-    cudaMemcpy(gradient.data(), d_gradient, grayImageSize,
+    cudaMemcpy(gradient.data(), d_grayImage, grayImageSize,
                cudaMemcpyDeviceToHost);
-    cudaMemcpy(direction.data(), d_direction, directionSize,
-               cudaMemcpyDeviceToHost);
+    // cudaMemcpy(direction.data(), d_direction, directionSize,
+    //            cudaMemcpyDeviceToHost);
 
     // Free device memory
     cudaFree(d_image);
     cudaFree(d_grayImage);
-    cudaFree(d_gradient);
-    cudaFree(d_direction);
+    // cudaFree(d_gradient);
+    // cudaFree(d_direction);
 }
 
 __global__ void suppressWeakGradientsKernel(unsigned char *gradient, int width,
