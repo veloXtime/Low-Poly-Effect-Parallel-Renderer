@@ -437,10 +437,11 @@ __global__ void drawEdgesFromAnchorsKernel(unsigned char *d_gradient,
          px < width && px < (x + 1) * SMALL_BLOCK_LENGTH; ++px)
         for (int py = y * SMALL_BLOCK_LENGTH;
              py < height && py < (y + 1) * SMALL_BLOCK_LENGTH; ++py) {
-            if (d_anchor[y * width + x]) {
-                bool horizontal = isHorizontalCuda(d_direction[y * width + x]);
-                drawEdgesFromAnchorKernel(x, y, d_gradient, d_direction, d_edge,
-                                          horizontal, width, height, 0);
+            if (d_anchor[py * width + px]) {
+                bool horizontal =
+                    isHorizontalCuda(d_direction[py * width + px]);
+                drawEdgesFromAnchorKernel(px, py, d_gradient, d_direction,
+                                          d_edge, horizontal, width, height, 0);
             }
         }
 }
