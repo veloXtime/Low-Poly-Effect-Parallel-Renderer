@@ -2,6 +2,8 @@
 #define EDGE_DRAW_H
 
 #include "CImg.h"
+#include <chrono>
+#include <iostream>
 
 using CImg = cimg_library::CImg<unsigned char>;
 using CImgBool = cimg_library::CImg<bool>;

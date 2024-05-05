@@ -75,6 +75,8 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
     size_t grayImageSize = width * height * sizeof(unsigned char);
     size_t directionSize = width * height * sizeof(float);
 
+    auto start = std::chrono::high_resolution_clock::now();
+
     cudaMalloc(&d_image, imageSize);
     cudaMalloc(&d_grayImage, grayImageSize);
     cudaMalloc(&d_gradient, grayImageSize);
@@ -93,6 +95,13 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
 
     colorToGrayKernel<<<gridSize, blockSize>>>(d_image, d_grayImage, width,
                                                height);
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "Time Grayscale GPU: " << duration.count() << " microseconds"
+              << std::endl;
+
+    start = std::chrono::high_resolution_clock::now();
     gradientCalculationKernel<<<gridSize, blockSize>>>(
         d_grayImage, d_gradient, d_direction, width, height);
 
@@ -101,6 +110,12 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
                cudaMemcpyDeviceToHost);
     cudaMemcpy(direction.data(), d_direction, directionSize,
                cudaMemcpyDeviceToHost);
+
+    end = std::chrono::high_resolution_clock::now();
+    duration =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "Time Gradient GPU: " << duration.count() << " microseconds"
+              << std::endl;
 
     // Free device memory
     cudaFree(d_image);

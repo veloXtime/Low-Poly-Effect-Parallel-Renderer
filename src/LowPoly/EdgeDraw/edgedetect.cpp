@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "CImg.h"
 #include "edgedraw.h"
 
@@ -36,6 +34,8 @@ CImg extractEdgeCanny(CImg &image, int method) {
  * Convert colored image to grayscale and calculate gradient
  */
 void gradientInGray(CImg &image, CImg &gradient, CImgFloat &direction) {
+    auto start = std::chrono::high_resolution_clock::now();
+
     // Convert the image to grayscale
     CImg grayImage(image.width(), image.height());
 
@@ -49,7 +49,14 @@ void gradientInGray(CImg &image, CImg &gradient, CImgFloat &direction) {
         grayImage(x, y) = grayValue;
     }
 
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "Time Grayscale GPU: " << duration.count() << " microseconds"
+              << std::endl;
+
     // Calculate the gradient in the grayscale image
+    start = std::chrono::high_resolution_clock::now();
     cimg_forXY(grayImage, x, y) {
         // If the pixel is not at the edge of the image
         if (x > 0 && x < grayImage.width() - 1 && y > 0 &&
@@ -59,6 +66,12 @@ void gradientInGray(CImg &image, CImg &gradient, CImgFloat &direction) {
             direction(x, y) = gr.dir;
         }
     }
+
+    end = std::chrono::high_resolution_clock::now();
+    duration =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "Time Gradient GPU: " << duration.count() << " microseconds"
+              << std::endl;
 }
 
 /**
