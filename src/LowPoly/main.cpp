@@ -65,6 +65,12 @@ CImg applyEdgeDetectionGPU(CImg& blurredImage) {
     return edgeGPU;
 }
 
+void applyTriangulation(CImg& edge, CImg& image) {
+    pickVertices(edge);
+    CImgInt voronoi = jumpFloodAlgorithm(edge);
+    delaunayTriangulation(voronoi, image);
+}
+
 int main(int argc, char* argv[]) {
     string imagePath;
 
@@ -98,23 +104,31 @@ int main(int argc, char* argv[]) {
     CImg edgeGPU = applyEdgeDetectionGPU(blurredImage);
 
     // // Delaunay triangulation
-    // pickVertices(edgeCPU);
-    // CImgInt voronoi = jumpFloodAlgorithm(edgeCPU);
-    // delaunayTriangulation(voronoi, image);
+    CImg lowPolyImageCPU = image;
+    CImg lowPolyImageGPU = image;
+    applyTriangulation(edgeCPU, lowPolyImageCPU);
+    applyTriangulation(edgeGPU, lowPolyImageGPU);
 
     // Display the original and blurred images
     cimg_library::CImgDisplay display(image, "Original Image");
     cimg_library::CImgDisplay displayBlurred(blurredImage, "Blurred Image");
     cimg_library::CImgDisplay displayEdgeCPU(edgeCPU, "Edge Image CPU");
     cimg_library::CImgDisplay displayEdgeGPU(edgeGPU, "Edge Image GPU");
+    cimg_library::CImgDisplay displayLowPolyCPU(lowPolyImageCPU,
+                                                "Low Poly Image CPU");
+    cimg_library::CImgDisplay displayLowPolyGPU(lowPolyImageCPU,
+                                                "Low Poly Image CPU");
 
     // cimg_library::CImgDisplay displayVoronoi(voronoi, "Edge Image");
     // Wait for the display windows to close
-    while (!display.is_closed() && !displayEdgeCPU.is_closed()) {
+    while (!display.is_closed() && !displayEdgeCPU.is_closed() &&
+           !displayBlurred.is_closed() && !displayEdgeGPU.is_closed() &&
+           !displayLowPolyCPU.is_closed()) {
         display.wait();
         displayEdgeCPU.wait();
-        // displayVoronoi.wait();
         displayEdgeGPU.wait();
+        displayLowPolyCPU.wait();
+        displayLowPolyGPU.wait();
     }
 
     // Free memory
