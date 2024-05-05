@@ -66,9 +66,63 @@ CImg applyEdgeDetectionGPU(CImg& blurredImage) {
 }
 
 void applyTriangulation(CImg& edge, CImg& image) {
+    cout << "-------------------------------------------" << endl;
+    auto veryStart = chrono::high_resolution_clock::now();
     pickVertices(edge);
+    auto end = chrono::high_resolution_clock::now();
+    auto duration =
+        chrono::duration_cast<chrono::microseconds>(end - veryStart);
+    cout << "Time taken for pickVertices (CPU): " << duration.count()
+         << " microseconds" << endl;
+
+    auto start = chrono::high_resolution_clock::now();
     CImgInt voronoi = jumpFloodAlgorithm(edge);
+    end = chrono::high_resolution_clock::now();
+    duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    cout << "Time taken for jumpFloodAlgorithm (CPU): " << duration.count()
+         << " microseconds" << endl;
+
+    start = chrono::high_resolution_clock::now();
     delaunayTriangulation(voronoi, image);
+    auto veryEnd = chrono::high_resolution_clock::now();
+    duration = chrono::duration_cast<chrono::microseconds>(veryEnd - start);
+    cout << "Time taken for delaunayTriangulation (CPU): " << duration.count()
+         << " microseconds" << endl;
+
+    duration = chrono::duration_cast<chrono::microseconds>(veryEnd - veryStart);
+    cout << "Time taken for Triangulation in total (CPU): " << duration.count()
+         << " microseconds" << endl;
+    cout << "-------------------------------------------" << endl;
+}
+
+void applyTriangulationGPU(CImg& edge, CImg& image) {
+    cout << "-------------------------------------------" << endl;
+    auto veryStart = chrono::high_resolution_clock::now();
+    pickVerticesGPU(edge);
+    auto end = chrono::high_resolution_clock::now();
+    auto duration =
+        chrono::duration_cast<chrono::microseconds>(end - veryStart);
+    cout << "Time taken for pickVertices (GPU): " << duration.count()
+         << " microseconds" << endl;
+
+    auto start = chrono::high_resolution_clock::now();
+    CImgInt voronoi = jumpFloodAlgorithmGPU(edge);
+    end = chrono::high_resolution_clock::now();
+    duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    cout << "Time taken for jumpFloodAlgorithm (GPU): " << duration.count()
+         << " microseconds" << endl;
+
+    start = chrono::high_resolution_clock::now();
+    delaunayTriangulationGPU(voronoi, image);
+    auto veryEnd = chrono::high_resolution_clock::now();
+    duration = chrono::duration_cast<chrono::microseconds>(veryEnd - start);
+    cout << "Time taken for delaunayTriangulation (GPU): " << duration.count()
+         << " microseconds" << endl;
+
+    duration = chrono::duration_cast<chrono::microseconds>(veryEnd - veryStart);
+    cout << "Time taken for Triangulation in total (GPU): " << duration.count()
+         << " microseconds" << endl;
+    cout << "-------------------------------------------" << endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -107,7 +161,7 @@ int main(int argc, char* argv[]) {
     CImg lowPolyImageCPU = image;
     CImg lowPolyImageGPU = image;
     applyTriangulation(edgeCPU, lowPolyImageCPU);
-    applyTriangulation(edgeGPU, lowPolyImageGPU);
+    applyTriangulationGPU(edgeGPU, lowPolyImageGPU);
 
     // Display the original and blurred images
     cimg_library::CImgDisplay display(image, "Original Image");
@@ -116,8 +170,8 @@ int main(int argc, char* argv[]) {
     cimg_library::CImgDisplay displayEdgeGPU(edgeGPU, "Edge Image GPU");
     cimg_library::CImgDisplay displayLowPolyCPU(lowPolyImageCPU,
                                                 "Low Poly Image CPU");
-    cimg_library::CImgDisplay displayLowPolyGPU(lowPolyImageCPU,
-                                                "Low Poly Image CPU");
+    cimg_library::CImgDisplay displayLowPolyGPU(lowPolyImageGPU,
+                                                "Low Poly Image GPU");
 
     // cimg_library::CImgDisplay displayVoronoi(voronoi, "Edge Image");
     // Wait for the display windows to close

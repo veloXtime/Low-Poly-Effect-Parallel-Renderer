@@ -1,9 +1,3 @@
-#include <algorithm>
-#include <iostream>
-#include <random>
-#include <set>
-#include <unordered_map>
-
 #include "delaunay.h"
 
 // @todo: change to use siteId = x * width + y to store site center information
@@ -13,7 +7,6 @@
  * @param edge The edge obtained from edge draw algorithm
  */
 void pickVertices(CImg &edge) {
-    int ctr = 1;
     cimg_forXY(edge, x, y) {
         if (edge(x, y) == 254) {
             edge(x, y) = 255;
@@ -28,7 +21,6 @@ void pickVertices(CImg &edge) {
     edge(edge.width() - 1, edge.height() - 1) = 255;
 
     // Optionally, add edge boundary points
-
     std::uniform_int_distribution<int> distribution(0, 255);
     std::default_random_engine generator;
     for (int x = 0; x < edge.width(); x += distribution(generator)) {

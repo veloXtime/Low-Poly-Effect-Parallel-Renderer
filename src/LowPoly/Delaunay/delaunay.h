@@ -1,5 +1,11 @@
-#ifndef DELAUNAY_H 
+#ifndef DELAUNAY_H
 #define DELAUNAY_H
+
+#include <algorithm>
+#include <iostream>
+#include <random>
+#include <set>
+#include <unordered_map>
 
 #include "CImg.h"
 
@@ -25,9 +31,13 @@ using CImgInt = cimg_library::CImg<int>;
 
 // Functions for Delaunay triangulation
 void pickVertices(CImg &edge);
+void pickVerticesGPU(CImg &edge);
 
-CImgInt jumpFloodAlgorithm(CImg& vertices);
+CImgInt jumpFloodAlgorithm(CImg &vertices);
+CImgInt jumpFloodAlgorithmGPU(CImg &vertices);
+
 void delaunayTriangulation(CImgInt &voronoi, CImg &image);
+void delaunayTriangulationGPU(CImgInt &voronoi, CImg &image);
 
 CImg colorVoronoiDiagram(CImgInt &voronoi);
 
