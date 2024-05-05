@@ -475,8 +475,11 @@ void drawEdgesFromAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
     // Kernel launch parameters
     // TODO: extract true anchors for cuda threads
     dim3 blockSize(16, 16);
-    dim3 gridSize((width + blockSize.x - 1) / blockSize.x,
-                  (height + blockSize.y - 1) / blockSize.y);
+    dim3 gridSize(
+        ((width + smallBlockLength - 1) / smallBlockLength + blockSize.x - 1) /
+            blockSize.x,
+        ((height + smallBlockLength - 1) / smallBlockLength + blockSize.y - 1) /
+            blockSize.y);
 
     // Launch kernel
     drawEdgesFromAnchorsKernel<<<gridSize, blockSize>>>(
