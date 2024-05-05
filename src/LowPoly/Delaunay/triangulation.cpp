@@ -1,8 +1,8 @@
+#include <algorithm>
 #include <iostream>
 #include <random>
 #include <set>
 #include <unordered_map>
-#include <algorithm>
 
 #include "delaunay.h"
 
@@ -32,8 +32,8 @@ void pickVertices(CImg &edge) {
     std::uniform_int_distribution<int> distribution(0, 255);
     std::default_random_engine generator;
     for (int x = 0; x < edge.width(); x += distribution(generator)) {
-        for (int y = 0; y < edge.height(); y+= distribution(generator)) {
-            edge(x, y ) = 255;
+        for (int y = 0; y < edge.height(); y += distribution(generator)) {
+            edge(x, y) = 255;
         }
     }
     for (int x = 0; x < edge.width(); x += distribution(generator)) {
@@ -126,7 +126,8 @@ CImg colorVoronoiDiagram(CImgInt &voronoi) {
     return coloredVoronoi;
 }
 
-bool pointInTriangle(int px, int py, int ax, int ay, int bx, int by, int cx, int cy) {
+bool pointInTriangle(int px, int py, int ax, int ay, int bx, int by, int cx,
+                     int cy) {
     int v0x = cx - ax;
     int v0y = cy - ay;
     int v1x = bx - ax;
@@ -145,6 +146,17 @@ bool pointInTriangle(int px, int py, int ax, int ay, int bx, int by, int cx, int
     float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
 
     return (u >= 0) && (v >= 0) && (u + v < 1);
+}
+
+Point centerPixelOfTriangle(int ax, int ay, int bx, int by, int cx, int cy) {
+    int x = (ax + bx + cx) / 3;
+    int y = (ay + by + cy) / 3;
+
+    if (pointInTriangle(x, y, ax, ay, bx, by, cx, cy)) {
+        return Point{x, y};
+    } else {
+        return Point{ax, ay};
+    }
 }
 
 void delaunayTriangulation(CImgInt &voronoi, CImg &image) {
@@ -171,8 +183,8 @@ void delaunayTriangulation(CImgInt &voronoi, CImg &image) {
                 triangles.push_back(Triangle{topLeft, topRight, botLeft});
                 triangles.push_back(Triangle{topRight, botLeft, botRight});
             } else if (sitesVector.size() == 3) {
-                triangles.push_back(Triangle{sitesVector[0], sitesVector[1],
-                                    sitesVector[2]});
+                triangles.push_back(
+                    Triangle{sitesVector[0], sitesVector[1], sitesVector[2]});
             }
         }
     }
@@ -186,32 +198,20 @@ void delaunayTriangulation(CImgInt &voronoi, CImg &image) {
         int bx = s2 % width, by = s2 / width;
         int cx = s3 % width, cy = s3 / width;
 
-        float R = 0;
-        float G = 0;
-        float B = 0;
-        float ctr = 0;
+        Point centerPixel = centerPixelOfTriangle(ax, ay, bx, by, cx, cy);
+        int R = image(centerPixel.x, centerPixel.y, 0);
+        int G = image(centerPixel.x, centerPixel.y, 1);
+        int B = image(centerPixel.x, centerPixel.y, 2);
 
         // Scan over image dimensions
-        for (int x = std::min(std::min(ax, bx), cx); x < std::max(std::max(ax, bx), cx); x++) {
-            for (int y = std::min(std::min(ay, by), cy); y < std::max(std::max(ay, by), cy); y++) {
+        for (int x = std::min(std::min(ax, bx), cx);
+             x < std::max(std::max(ax, bx), cx); x++) {
+            for (int y = std::min(std::min(ay, by), cy);
+                 y < std::max(std::max(ay, by), cy); y++) {
                 if (pointInTriangle(x, y, ax, ay, bx, by, cx, cy)) {
-                    R += image(x, y, 0);
-                    G += image(x, y, 1);
-                    B += image(x, y, 2);
-                    ctr++;
-                }
-            }
-        }
-        if (ctr > 0) {
-        R = R / ctr;
-        G = G / ctr;
-        B = B / ctr; }
-        for (int x = std::min(std::min(ax, bx), cx); x < std::max(std::max(ax, bx), cx); x++) {
-            for (int y = std::min(std::min(ay, by), cy); y < std::max(std::max(ay, by), cy); y++) {
-                if (pointInTriangle(x, y, ax, ay, bx, by, cx, cy)) {
-                    image(x, y, 0) = int(R);
-                    image(x, y, 1) = int(G);
-                    image(x, y, 2) = int(B);
+                    image(x, y, 0) = R;
+                    image(x, y, 1) = G;
+                    image(x, y, 2) = B;
                 }
             }
         }
