@@ -9,8 +9,8 @@ INCLUDE := -I. -IDelaunay -IEdgeDraw -IGaussianBlur
 LIBS := -lpthread -lX11
 
 # Main executable
-main: main.o gaussianblur.o edgedetect_cpp.o edgedetect_cu.o edgedraw.o triangulation.o
-	$(NVCC) $(NVCCFLAGS) -o main main.o gaussianblur.o edgedetect_cpp.o edgedetect_cu.o edgedraw.o triangulation.o $(LDFLAGS) $(INCLUDE) $(LIBS)
+main: main.o gaussianblur.o edgedetect_cpp.o edgedetect_cu.o edgedraw.o triangulation.o triangulation_cu.o
+	$(NVCC) $(NVCCFLAGS) -o main main.o gaussianblur.o edgedetect_cpp.o edgedetect_cu.o edgedraw.o triangulation.o triangulation_cu.o $(LDFLAGS) $(INCLUDE) $(LIBS)
 
 # Object files
 main.o: main.cpp 
@@ -31,6 +31,9 @@ edgedraw.o: EdgeDraw/edgedraw.cpp EdgeDraw/edgedraw.h
 triangulation.o: Delaunay/triangulation.cpp Delaunay/delaunay.h
 	$(CXX) $(CXXFLAGS) -c Delaunay/triangulation.cpp $(INCLUDE)
 
+triangulation_cu.o: Delaunay/triangulation.cu Delaunay/delaunay.h
+	$(NVCC) $(NVCCFLAGS) -c Delaunay/triangulation.cu -o triangulation_cu.o $(INCLUDE)
+
 # Clean
 clean:
-	rm -f main main.o gaussianblur.o edgedetect_cpp.o edgedetect_cu.o edgedraw.o triangulation.o
+	rm -f main main.o gaussianblur.o edgedetect_cpp.o edgedetect_cu.o edgedraw.o triangulation.o triangulation_cu.o
