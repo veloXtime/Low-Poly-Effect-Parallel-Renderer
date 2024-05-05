@@ -481,6 +481,11 @@ void drawEdgesFromAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
         ((height + smallBlockLength - 1) / smallBlockLength + blockSize.y - 1) /
             blockSize.y);
 
+    // Set stack size limit if needed
+    if (width * height > 1980 * 1080) {
+        cudaDeviceSetLimit(cudaLimitStackSize, 2 * 1024);
+    }
+
     // Launch kernel
     drawEdgesFromAnchorsKernel<<<gridSize, blockSize>>>(
         d_gradient, d_direction, d_anchor, d_edge, width, height);
@@ -488,6 +493,22 @@ void drawEdgesFromAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
     // Copy results back to host
     cudaMemcpy(edge.data(), d_edge, numPixels * sizeof(unsigned char),
                cudaMemcpyDeviceToHost);
+}
+
+#define checkCudaErrors(val) check_cuda((val), #val, __FILE__, __LINE__)
+
+void check_cuda(cudaError_t result, char const *const func,
+                const char *const file, int const line) {
+    cudaDeviceSynchronize();
+    if (result != cudaSuccess) {  // It's often clearer to compare
+                                  // against cudaSuccess
+        std::cerr << "CUDA error = " << static_cast<unsigned int>(result)
+                  << " (" << cudaGetErrorString(result)
+                  << ") "  // Include the human-readable error message
+                  << "at " << file << ":" << line << " '" << func << "' \n";
+        cudaDeviceReset();  // Reset the device to clear any lingering states
+        exit(99);           // Exit with a non-zero status to indicate failure
+    }
 }
 
 /**
@@ -544,6 +565,11 @@ CImg edgeDrawGPUCombined(CImg &image) {
     // Step 4: Determine anchors
     determineAnchorsKernel<<<gridSize, blockSize>>>(d_gradient, d_direction,
                                                     d_anchor, width, height);
+
+    // Set stack size limit if needed
+    if (width * height > 1980 * 1080) {
+        cudaDeviceSetLimit(cudaLimitStackSize, 2 * 1024);
+    }
 
     // Step 5: Draw edges from anchors
     drawEdgesFromAnchorsKernel<<<gridSize, blockSize>>>(

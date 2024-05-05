@@ -52,7 +52,7 @@ void gradientInGray(CImg &image, CImg &gradient, CImgFloat &direction) {
     auto end = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Time Grayscale GPU: " << duration.count() << " microseconds"
+    std::cout << "Time Grayscale CPU: " << duration.count() << " microseconds"
               << std::endl;
 
     // Calculate the gradient in the grayscale image
@@ -70,7 +70,7 @@ void gradientInGray(CImg &image, CImg &gradient, CImgFloat &direction) {
     end = std::chrono::high_resolution_clock::now();
     duration =
         std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Time Gradient GPU: " << duration.count() << " microseconds"
+    std::cout << "Time Gradient CPU: " << duration.count() << " microseconds"
               << std::endl;
 }
 
