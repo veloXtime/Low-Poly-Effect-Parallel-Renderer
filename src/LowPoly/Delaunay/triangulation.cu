@@ -190,10 +190,9 @@ __global__ void delaunayTriangulationKernel(int *d_voronoi,
         }
 
         if (uniques == 4) {
-            int idx = atomicAdd(triangles_count, 1);
+            int idx = atomicAdd(triangles_count, 2);
             d_triangles[idx] = TriangleCUDA(topLeft, topRight, botLeft);
-            idx = atomicAdd(triangles_count, 1);
-            d_triangles[idx] = TriangleCUDA(topRight, botLeft, botRight);
+            d_triangles[idx + 1] = TriangleCUDA(topRight, botLeft, botRight);
         } else if (uniques == 3) {
             int idx = atomicAdd(triangles_count, 1);
             d_triangles[idx] =
@@ -270,6 +269,17 @@ __global__ void transformTrianglesKernel(unsigned char *d_image,
     }
 }
 
+#define gpuErrchk(ans) \
+    { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line,
+                      bool abort = true) {
+    if (code != cudaSuccess) {
+        fprintf(stderr, "GPUassert: %s %s %d\n", cudaGetErrorString(code), file,
+                line);
+        if (abort) exit(code);
+    }
+}
+
 void delaunayTriangulationGPU(CImgInt &voronoi, CImg &image) {
     int width = voronoi.width();
     int height = voronoi.height();
@@ -300,14 +310,17 @@ void delaunayTriangulationGPU(CImgInt &voronoi, CImg &image) {
     delaunayTriangulationKernel<<<dimGrid1, dimBlock1>>>(
         d_voronoi, d_image, d_triangles, triangles_count, width, height);
 
-    cudaDeviceSynchronize();
-    std::cout << "\tTriangles count: " << *triangles_count << std::endl;
+    // Fetch triangles count
+    int host_triangles_count;
+    cudaMemcpy(&host_triangles_count, triangles_count, sizeof(int),
+               cudaMemcpyDeviceToHost);
+    std::cout << "\tTriangles count: " << host_triangles_count << std::endl;
 
     // Step 2: Transform triangles to image
     dim3 dimBlock2(16);
-    dim3 dimGrid2((*triangles_count + dimBlock2.x - 1) / dimBlock2.x);
+    dim3 dimGrid2((host_triangles_count + dimBlock2.x - 1) / dimBlock2.x);
     transformTrianglesKernel<<<dimGrid2, dimBlock2>>>(
-        d_image, d_triangles, *triangles_count, width, height);
+        d_image, d_triangles, host_triangles_count, width, height);
 
     cudaMemcpy(image.data(), d_image, imageSize, cudaMemcpyDeviceToHost);
 
