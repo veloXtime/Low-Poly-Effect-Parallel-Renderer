@@ -1,9 +1,10 @@
 #ifndef EDGE_DRAW_H
 #define EDGE_DRAW_H
 
-#include "CImg.h"
 #include <chrono>
 #include <iostream>
+
+#include "CImg.h"
 
 using CImg = cimg_library::CImg<unsigned char>;
 using CImgBool = cimg_library::CImg<bool>;
@@ -49,6 +50,7 @@ void determineAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
 void drawEdgesFromAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
                              const CImgBool &anchors, CImg &edge);
 CImg edgeDrawGPU(CImg &image, int method = 0);
+CImg edgeDrawGPUCombined(CImg &image);
 
 // Functions for Delaunay triangulation
 void pickVertices(CImg &edge);

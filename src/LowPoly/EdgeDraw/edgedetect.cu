@@ -489,3 +489,74 @@ void drawEdgesFromAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
     cudaMemcpy(edge.data(), d_edge, numPixels * sizeof(unsigned char),
                cudaMemcpyDeviceToHost);
 }
+
+/**
+ * @brief Combines all the edge detection steps into a single function
+ */
+CImg edgeDrawGPUCombined(CImg &image) {
+    int width = image.width(), height = image.height();
+
+    // Flatten the image data for CUDA
+    unsigned char *d_image, *d_grayImage, *d_gradient, *d_edge;
+    float *d_direction;
+    bool *d_anchor;
+
+    size_t imageSize = width * height * 3 * sizeof(unsigned char);
+    size_t grayImageSize = width * height * sizeof(unsigned char);
+    size_t directionSize = width * height * sizeof(float);
+    size_t anchorSize = width * height * sizeof(bool);
+
+    cudaMalloc(&d_image, imageSize);
+    cudaMalloc(&d_grayImage, grayImageSize);
+    cudaMalloc(&d_gradient, grayImageSize);
+    cudaMalloc(&d_direction, directionSize);
+    cudaMalloc(&d_anchor, anchorSize);
+    cudaMalloc(&d_edge, grayImageSize);
+
+    cudaMemcpy(d_image, image.data(), imageSize, cudaMemcpyHostToDevice);
+    cudaMemset(d_gradient, 0, grayImageSize);
+    cudaMemset(d_direction, 0, directionSize);
+    cudaMemset(d_anchor, 0, anchorSize);
+    cudaMemset(d_edge, 0, grayImageSize);
+
+    // Kernel launch parameters
+    dim3 blockSize(16, 16);
+    dim3 gridSize(
+        ((width + smallBlockLength - 1) / smallBlockLength + blockSize.x - 1) /
+            blockSize.x,
+        ((height + smallBlockLength - 1) / smallBlockLength + blockSize.y - 1) /
+            blockSize.y);
+
+    // Step 1: Convert the image to grayscale
+    colorToGrayKernel<<<gridSize, blockSize>>>(d_image, d_grayImage, width,
+                                               height);
+    cudaFree(d_image);
+
+    // Step 2: Calculate the gradient and direction of the image
+    gradientCalculationKernel<<<gridSize, blockSize>>>(
+        d_grayImage, d_gradient, d_direction, width, height);
+    cudaFree(d_grayImage);
+
+    // Step 3: Suppress weak gradients
+    suppressWeakGradientsKernel<<<gridSize, blockSize>>>(d_gradient, width,
+                                                         height);
+
+    // Step 4: Determine anchors
+    determineAnchorsKernel<<<gridSize, blockSize>>>(d_gradient, d_direction,
+                                                    d_anchor, width, height);
+
+    // Step 5: Draw edges from anchors
+    drawEdgesFromAnchorsKernel<<<gridSize, blockSize>>>(
+        d_gradient, d_direction, d_anchor, d_edge, width, height);
+
+    // Free device memory
+    cudaFree(d_gradient);
+    cudaFree(d_direction);
+    cudaFree(d_anchor);
+
+    // Return the edge image
+    CImg edge(width, height, 1, 1, 0);
+    cudaMemcpy(edge.data(), d_edge, grayImageSize, cudaMemcpyDeviceToHost);
+    cudaFree(d_edge);
+    return edge;
+}
