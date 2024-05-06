@@ -20,4 +20,6 @@ unsigned char *gaussianBlurCPU(const unsigned char *inputImage, int width,
 unsigned char *gaussianBlur(const unsigned char *inputImage, int width,
                             int height, int channels);
 
+void gpuWarmUp();
+
 #endif

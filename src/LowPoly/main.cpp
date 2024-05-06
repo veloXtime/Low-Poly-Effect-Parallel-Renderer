@@ -8,31 +8,32 @@
 
 using namespace std;
 
-unsigned char* applyGaussianBlur(cimg_library::CImg<unsigned char>& image,
-                                 int width, int height, int channels) {
+unsigned char* applyGaussianBlur(CImg& image, int width, int height,
+                                 int channels) {
     // Apply Gaussian blur using CUDA
     auto start = std::chrono::high_resolution_clock::now();
 
-    unsigned char* outputImage = gaussianBlur(image, width, height, channels);
+    unsigned char* outputImage =
+        gaussianBlur(image.data(), width, height, channels);
 
     auto end = std::chrono::high_resolution_clock::now();
 
     // Get duration
     auto duration =
         std::chrono::duration_cast<chrono::microseconds>(end - start);
-    cout << "Time taken for Gaussian blur: " << duration.count()
+    cout << "Time taken for Gaussian blur GPU: " << duration.count()
          << " microseconds" << endl;
 
     return outputImage;
 }
 
-unsigned char* applyGaussianBlurCPU(cimg_library::CImg<unsigned char>& image,
-                                    int width, int height, int channels) {
+unsigned char* applyGaussianBlurCPU(CImg& image, int width, int height,
+                                    int channels) {
     // Apply Gaussian blur using CUDA
     auto start = std::chrono::high_resolution_clock::now();
 
     unsigned char* outputImage =
-        gaussianBlurCPU(image, width, height, channels);
+        gaussianBlurCPU(image.data(), width, height, channels);
 
     auto end = std::chrono::high_resolution_clock::now();
 
@@ -62,6 +63,17 @@ CImg applyEdgeDetectionGPU(CImg& blurredImage) {
     auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
     cout << "Time taken for Edge Extraction (GPU): " << duration.count()
          << " microseconds" << endl;
+    return edgeGPU;
+}
+
+CImg applyEdgeDetectionGPUCombined(CImg& blurredImage) {
+    auto start = chrono::high_resolution_clock::now();
+    cimg_library::CImg<unsigned char> edgeGPU =
+        edgeDrawGPUCombined(blurredImage);
+    auto end = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    cout << "Time taken for Edge Extraction (GPU Combined): "
+         << duration.count() << " microseconds" << endl;
     return edgeGPU;
 }
 
@@ -137,6 +149,8 @@ int main(int argc, char* argv[]) {
         getline(cin, imagePath);  // Read the entire line, including spaces
     }
 
+    gpuWarmUp();
+
     // Load the image
     CImg image(imagePath.c_str());
     int width = image.width();
@@ -148,7 +162,8 @@ int main(int argc, char* argv[]) {
 
     // Step 1: perform the Gaussian blur
     unsigned char* gbImage = applyGaussianBlur(image, width, height, channels);
-    // gbImage = applyGaussianBlurCPU(image, width, height, channels);
+    gbImage = applyGaussianBlurCPU(image, width, height, channels);
+
     CImg blurredImage(gbImage, width, height, 1, 3, true);
 
     // Apply edge extraction using CPU
@@ -156,6 +171,9 @@ int main(int argc, char* argv[]) {
 
     // Apply edge extraction using GPU
     CImg edgeGPU = applyEdgeDetectionGPU(blurredImage);
+
+    // Apply edge extraction using GPU Combined
+    CImg edgeGPUCombined = applyEdgeDetectionGPUCombined(blurredImage);
 
     // // Delaunay triangulation
     CImg lowPolyImageCPU = image;

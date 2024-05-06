@@ -182,3 +182,19 @@ unsigned char* gaussianBlurCPU(const unsigned char* inputImage, int width,
 
     return outputImage;
 }
+
+__global__ void warmupKernel() {};
+
+void gpuWarmUp() {
+    // Launch the warm-up kernel with a single thread
+    warmupKernel<<<1, 1>>>();
+
+    // Check for errors in kernel launch
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA Error: " << cudaGetErrorString(err) << std::endl;
+    }
+
+    // Wait for the GPU to finish
+    cudaDeviceSynchronize();
+}
