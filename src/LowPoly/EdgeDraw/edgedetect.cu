@@ -75,7 +75,7 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
     size_t grayImageSize = width * height * sizeof(unsigned char);
     size_t directionSize = width * height * sizeof(float);
 
-    auto start = std::chrono::high_resolution_clock::now();
+    // auto start = std::chrono::high_resolution_clock::now();
 
     cudaMalloc(&d_image, imageSize);
     cudaMalloc(&d_grayImage, grayImageSize);
@@ -95,13 +95,13 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
 
     colorToGrayKernel<<<gridSize, blockSize>>>(d_image, d_grayImage, width,
                                                height);
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration =
-        std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Time Grayscale GPU: " << duration.count() << " microseconds"
-              << std::endl;
+    // auto end = std::chrono::high_resolution_clock::now();
+    // auto duration =
+    //     std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    // std::cout << "Time Grayscale GPU: " << duration.count() << " microseconds"
+    //           << std::endl;
 
-    start = std::chrono::high_resolution_clock::now();
+    // start = std::chrono::high_resolution_clock::now();
     gradientCalculationKernel<<<gridSize, blockSize>>>(
         d_grayImage, d_gradient, d_direction, width, height);
 
@@ -111,11 +111,11 @@ void gradientInGrayGPU(CImg &image, CImg &gradient, CImgFloat &direction) {
     cudaMemcpy(direction.data(), d_direction, directionSize,
                cudaMemcpyDeviceToHost);
 
-    end = std::chrono::high_resolution_clock::now();
-    duration =
-        std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Time Gradient GPU: " << duration.count() << " microseconds"
-              << std::endl;
+    // end = std::chrono::high_resolution_clock::now();
+    // duration =
+    //     std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    // std::cout << "Time Gradient GPU: " << duration.count() << " microseconds"
+    //           << std::endl;
 
     // Free device memory
     cudaFree(d_image);
@@ -473,7 +473,6 @@ void drawEdgesFromAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
                cudaMemcpyHostToDevice);
 
     // Kernel launch parameters
-    // TODO: extract true anchors for cuda threads
     dim3 blockSize(16, 16);
     dim3 gridSize(
         ((width + smallBlockLength - 1) / smallBlockLength + blockSize.x - 1) /
@@ -482,7 +481,7 @@ void drawEdgesFromAnchorsGPU(const CImg &gradient, const CImgFloat &direction,
             blockSize.y);
 
     // Set stack size limit if needed
-    if (width * height > 1980 * 1080) {
+    if (width * height > 800 * 600) {
         cudaDeviceSetLimit(cudaLimitStackSize, 2 * 1024);
     }
 
@@ -567,7 +566,7 @@ CImg edgeDrawGPUCombined(CImg &image) {
                                                     d_anchor, width, height);
 
     // Set stack size limit if needed
-    if (width * height > 1980 * 1080) {
+    if (width * height > 800 * 600) {
         cudaDeviceSetLimit(cudaLimitStackSize, 2 * 1024);
     }
 
